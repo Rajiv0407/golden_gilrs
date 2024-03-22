@@ -1,0 +1,262 @@
+<style>  
+	.thumb {
+		
+	}
+	.remove_img_preview {
+		position: relative;
+		top: -30px;
+		right: 7px;
+		width: 20px;
+		height: 20px;
+		background: black;
+		color: white;
+		border-radius: 50px;
+		font-size: 0.9em;
+		padding: 0 0.3em 0;
+		text-align: center;
+		cursor: pointer;
+		display: inline-block;
+	}
+
+	.remove_img_preview:before {
+		content: "×";
+	}
+</style>
+<div class="chat_write_messenger">
+            <div class="head_mg">
+                <div class="user_mg">
+                    <button type="button" onclick="chatBack()">back</button>
+					
+					
+                    <div class="mg_user_img">
+                        <?php if($group->image!=''){ ?> 
+                        <img src="{{$group->image }}" alt="">
+                        <?php } ?>
+                    </div>
+                    <div class="cont_mg">
+                        <h3>{{$group->group_name}}</h3>
+                       
+                        <!-- <p>last online 5 hours ago</p> -->
+                    </div>
+                </div>
+            </div>
+<div class="chat-body">
+<div class="chat-inner">
+    <div id="history">
+           @foreach($messages as $message) 
+		   <?php //echo "<pre>";print_r($message->image);die; ?>
+          
+        <div class="{{ ($message->from == Auth::id()) ? 'chat-mss rply-mss' : 'chat-mss' }}">
+            <ul>
+                <li>
+                    <div class="replay-mss">
+                        <div class="cont_bx">
+                            <?php if(!empty($message->message)){ ?>
+                                <p>{{ $message->message }}</p>
+                            <?php } ?>
+                            <?php if(isset($message->image) && !empty($message->image)){  ?>
+                                <?php foreach($message->image as $image_data){   ?>
+                                    <?php if($image_data['file_type']=="image"){ ?>
+                                        <img src="<?php echo $image_data['image']  ?>" class="img_thmb" alt="">
+                                    <?php } ?>
+
+                                    <?php if($image_data['file_type']=="application"){ ?>
+                                        <embed src="<?php echo $image_data['image'];  ?>" type="application/pdf"   height="300px" width="100%">
+                                    <?php } ?>
+
+                                    <?php if($image_data['file_type']=="video"){ ?>
+                                        <video width="320" height="240" controls>
+                                            <source src="<?php echo $image_data['image'];  ?>">					
+                                        </video>  
+                                    <?php } ?>
+                                <?php }  ?>
+                            <?php }  ?>
+                            <div class="date">
+                                <i class="ri-time-line"></i>{{$message->createdOn}}
+                            </div>                   
+                                                  
+                            <!-- {{ date('d M y, h:i a', strtotime($message->created_at)) }} -->
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        @endforeach
+        
+    </div>
+</div>
+</div>
+<div class="chat_footer">
+<form name="chatform" id="send-message" enctype="multipart/form-data">  
+<div class="more_opt_mg">
+
+  <div class="userbtn dropdown">
+        <a class="add_btn dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="ri-add-circle-fill"></i>
+        </a>
+        <div class="file_add dropdown-menu" aria-labelledby="dropdownMenuLink">
+   <ul>
+<li>
+<label for="chatvideo">
+
+<input type="file" name="chatvideo[]" id="chatvideo"  accept="video/*" multiple>
+<i class="ri-live-line"></i>
+</label>
+</li>
+<li>
+<label for="chatimg">
+<input type="file" name="chatimg[]" id="chatimg"  accept="image/png, image/gif, image/jpeg" / multiple>
+<i class="ri-image-line"></i>
+</label>
+</li>
+<li>
+<label for="chatFile">
+<input type="file" name="chatFile[]" id="chatFile" accept=".pdf, .xls, .xlsx" multiple>
+<i class="ri-file-add-line"></i>
+</label>
+</li>
+
+</ul>
+  </div>
+</div>
+
+
+<!---<button class="add_btn">
+<i class="ri-add-circle-fill"></i>
+</button>-->
+</div>
+<div class="mg_text_input">
+<div class="chat-box">
+<textarea rows="1" type="text" name="message" placeholder="Type a message here"
+class="msg_int_style" id="message" style="height: 32px;"></textarea>
+					<div class="upload_file_post1" id="chat_imgvideo" style="display:none;">
+						<div class="list_bx">
+							<div id="chat_image"> </div>
+						</div>
+					</div>
+
+ 
+</div>
+<!-- <button id="emoji-button"><span class="fa fa-smile"></span></button> -->
+</div>
+</form> 
+<div class="btn_grp">
+<button class="like_thump">
+<svg id="Smile_icon" data-name="Smile icon" xmlns="http://www.w3.org/2000/svg"
+width="25.073" height="24" viewBox="0 0 25.073 24">
+<g id="Ellipse" fill="none" stroke="#d7792d" stroke-width="2.5">
+<ellipse cx="12.536" cy="12" rx="12.536" ry="12" stroke="none" />
+<ellipse cx="12.536" cy="12" rx="11.286" ry="10.75" fill="none" />
+</g>
+<path id="Ellipse-2" data-name="Ellipse"
+d="M9.117,0A5.146,5.146,0,0,1,4.559,2.727,5.146,5.146,0,0,1,0,0"
+transform="translate(7.978 13.636)" fill="none" stroke="#d7792d"
+stroke-linecap="round" stroke-width="2.5" />
+<ellipse id="Ellipse_2" data-name="Ellipse 2" cx="1.14" cy="1.091" rx="1.14"
+ry="1.091" transform="translate(7.978 7.636)" fill="#d7792d" />
+<ellipse id="Ellipse_2.1" data-name="Ellipse 2.1" cx="1.14" cy="1.091"
+rx="1.14" ry="1.091" transform="translate(14.816 7.636)"
+fill="#d7792d" />
+</svg>
+</button>
+<button onclick="chat_message_fn(receiver_id);" class="btn_submit"><i class="ri-send-plane-fill"></i>
+</button>
+</div>
+</div>
+</div>
+
+<script>
+
+$('#chatimg').change(handleFileSelect);
+$('#chatvideo').change(handleFileSelect);  
+$('#chatFile').change(handleFileSelect);
+function handleFileSelect(event) {
+    var input = this;
+    if (input.files && input.files.length) {
+        var filesAmount = input.files.length;
+        for (i = 0; i < filesAmount; i++) {
+            const file = input.files[i];
+			
+            const fileType = file.type.split('/')[0];
+           alert(fileType);
+            var reader = new FileReader();
+            this.enabled = false;
+            reader.onload = (function (e) {
+                var span = document.createElement('span');
+                if (fileType === 'image') {
+                    span.innerHTML = ['<img id="test" class="thumb" src="', e.target.result, '" title="', escape(e.name), '"/><span class="remove_img_preview"></span>'].join('');
+                    document.getElementById('chat_image').insertBefore(span, null);
+                    $('#chat_imgvideo').show();
+                } else if (fileType === 'video') {
+                    span.innerHTML = ['<video controls id="test" class="thumb" src="', e.target.result, '" title="', escape(e.name), '"/><span class="remove_img_preview"></span>'].join('');
+                    document.getElementById('chat_image').insertBefore(span, null);
+                    $('#chat_imgvideo').show();
+                }
+				else if (fileType === 'application') {
+                    span.innerHTML = ['<embed id="test" class="thumb" src="', e.target.result, '" title="', escape(e.name), '"/><span class="remove_img_preview"></span>'].join('');
+                    document.getElementById('chat_image').insertBefore(span, null);
+                    $('#chat_imgvideo').show();
+                }
+            });
+            reader.readAsDataURL(input.files[i]);
+        }
+    }
+}
+
+$("#chatimg").change(function () {
+    var fileInput = document.getElementById('chatimg');
+    var fileUrl = window.URL.createObjectURL(fileInput.files[0]);
+    $(".video").attr("src", fileUrl);
+});
+$('#chat_image').on('click', '.remove_img_preview', function () {
+    $(this).parent('span').remove();
+    $(this).val("");
+});
+
+
+
+
+function chat_message_fn(id){
+
+	ajaxCsrf();  
+            var formData=new FormData($('#send-message')[0]);
+              $.ajax({
+                type: "POST",
+                url: baseUrl + '/group_message/'+id,    
+                data:formData ,
+				dataType:'json',
+                cache:false,
+                contentType:false,
+                processData:false,
+                success: function(html){
+                 
+                },error: function (jqXHR, status, err) {
+                        },
+                        complete: function () {
+                            scrollToBottomFunc();
+							$('#send-message')[0].reset();
+                            $("#chat_image").html("");							
+                        }
+                 });   
+
+        
+	
+}
+
+function chatBack(){
+	$.ajax({
+                type: "get",
+                url: baseUrl + '/contacts',    
+				dataType:'html',
+                success: function(html){
+                 $("#web_container").load(location.href + " #web_container");
+                }
+                 }); 
+}
+
+
+
+</script>
+
+
+

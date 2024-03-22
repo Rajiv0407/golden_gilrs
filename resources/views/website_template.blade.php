@@ -1,0 +1,1 @@
+@extends('includes.website.ajax_template')

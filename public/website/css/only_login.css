@@ -1,0 +1,5 @@
+ @media screen and (max-width: 980px) {
+  header.navbar_menu{position: absolute;left: 0px;right: 0px;background: #ffffff2b;}
+  .login_Home{height: auto;padding-top: 70px;min-height: 100vh;background-position: left -50px center;}
+
+ }

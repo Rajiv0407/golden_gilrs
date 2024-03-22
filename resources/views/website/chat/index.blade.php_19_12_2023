@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, target-densitydpi=device-dpi" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
+    <title>Golden Girls</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="{{asset('public/website/chat/css/bootstrap.min.css')}}">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.2.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{asset('public/website/chat/css/intlTelInput.css')}}">    
+    <link rel="stylesheet" href="{{asset('public/website/css/style.css')}}">
+</head>
+<!--  -->
+
+<body>
+    <div class="grid-container" id="web_container">
+        <header class="navbar_menu">
+            @include('includes.website.header')
+        </header>
+
+        <div class="main_cont">
+            <div class="user_prof chtmssgbx">
+                <div class="menu_section">
+                <div class="head">
+                        <h3>Message</h3>
+                    </div>    
+                <div class="memu_inner">
+                    
+                        <div class="menu_inner_list user_profile_menu chattab">
+                            <ul class="nav nav-tabs" role="tablist">
+                                @foreach($users as $user)
+                                <li class="nav-item " id="userList_{{ $user->id }}" role="presentation">
+                                    <button class="nav-link usrlist" id="{{ $user->id }}" data-bs-toggle="tab"
+                                        data-bs-target="#Profile-menu" onclick="chatMessage('{{ $user->id }}')"
+                                        type="button" role="tab" aria-selected="true">
+                                        <span class="nk-menu-img">
+                                            <img src="{{ $user->image }}" alt="">
+                                        </span>
+                                        <span class="nk-menu-text">
+                                            <h3 id="add_notfi_no_{{ $user->id }}">{{ $user->name }}
+                                                @if($user->isOnline)
+                                                <span></span>
+                                                @endif
+
+                                                @if($user->unread)
+                                                <span class="notfi_no">{{ $user->unread }}</span>
+
+                                                @endif
+                                            </h3>
+                                        </span>
+                                    </button>
+                                </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="section_right">
+                <div class="head">
+                        <h3>Profile</h3>
+                    </div>    
+
+                    <div class="chat_dshbrd">
+
+                        <div id="Profile-menu" >
+                            <h3>Dashboard </h3>
+                        </div>                    
+                    </div>                    
+                </div>
+            </div>
+
+        </div>
+
+        <footer class="footer_copy">
+            @include('includes.website.footer')
+        </footer>
+
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+
+    <script src="{{asset('public/website/js/bootstrap.min.js')}}"></script>
+    <script src="{{asset('public/website/js/intlTelInput.min.js')}}"></script>
+    <script src="{{asset('public/website/js/utils.js')}}"></script>
+    <script src="{{asset('public/website/js/custom.js')}}"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+
+    <script>
+
+        function getTime() {
+            var dt = new Date();
+            var time = dt.getHours() + ":" + (dt.getMinutes() < 10 ? '0' : '') + dt.getMinutes();
+            return time;
+        }
+
+        var receiver_id = '';
+        var my_id = "{{ Auth::id() }}";
+        $(document).ready(function () {
+
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
+            // Enable pusher logging - don't include this in production
+            Pusher.logToConsole = true;
+
+            var pusher = new Pusher('e9c75b86e285c511da57', {
+                cluster: 'ap2'
+            });
+
+            var channel = pusher.subscribe('my-channel');
+           
+            //+ ":" + dt.getSeconds()
+            channel.bind('App\\Events\\MyEvent', function (data) {
+                 //alert(data);
+                alert(JSON.stringify(data));
+				
+				var image_d='';
+				var message='';
+				if(data.message.image.length > 0){
+					 $.each(data.message.image, function (key, image_data) {
+                     if(image_data.file_type == 'image'){						 
+					 image_d +='<img src=' + image_data.file + ' alt="">';
+					 }
+					 if(image_data.file_type == 'vedio'){
+                      image_d+='<video class="vdo_thmb" controls><source src=' + image_data.file + '></video>'						 
+					 }
+					 if(image_data.file_type=='application'){						 
+					 image_d +='<embed src=' + image_data.file + ' class="img_thmb" alt="">';
+					 }
+					}); 
+				}else{
+					var image_d='';
+				}
+				if(data.message.message != ''){
+				//var message=data.message.message;
+				var message='<div class="cont_bx"><p>' + data.message.message + '</p></div>';
+				}else{
+					var message='';
+				}
+				
+                if (data.type == 1) {
+                    //alert(data.loginUserId);
+                    $('#add_notfi_no_' + data.loginUserId).append('<span></span>')
+                }
+                if (my_id == data.from) {
+                    $('#history').append('<div class="chat-mss rply-mss"><ul><li><div class="replay-mss">'+message+''+image_d+'</div><i class="date">' + getTime() + '</i></li></ul></div>');
+                    scrollToBottomFunc();
+                } else if (my_id == data.to) {
+
+                    if ($('.usrlist').hasClass('active')) {
+                        var activeUsrId = $(".usrlist").filter(".active").attr("id");
+
+                        if (receiver_id == data.from && activeUsrId == data.from) {
+                            $("#userList_" + data.from).prependTo(".nav-tabs");
+                            $('#history').append('<div class="chat-mss"><ul><li><div class="replay-mss">'+message+''+image_d+'</div><i class="date">' + getTime() + '</i></li></ul></div>');  
+                            scrollToBottomFunc();
+                        } else {
+                            addNotification(data.from);
+                        }
+
+
+                    } else {
+                        addNotification(data.from);
+                    }
+                }
+
+                //alert(JSON.stringify(data));
+
+
+                //$("#userList_59").prependTo(".nav-tabs");
+
+            });
+
+
+            function addNotification(usrId) {
+                $("#userList_" + usrId).prependTo(".nav-tabs");
+                var existNotification = parseInt($('#add_notfi_no_' + usrId).find('.notfi_no').html());
+                if (existNotification) {
+                    $('#add_notfi_no_' + usrId).find('.notfi_no').html(existNotification + 1);
+                } else {
+                    $('#add_notfi_no_' + usrId).append('<span class="notfi_no">1</span>');
+                }
+            }
+
+            //var channelName =  'notify-channel';
+            // var status = $('#id').val();
+            // var channel = pusher.subscribe('notify-channel');
+            // channel.bind('App\\Events\\Notify', function(data) {
+            // //  alert(JSON.stringify(data));
+            //       if (my_id == data.from) {
+            //           $('#' + data.to).click();
+            //       } else if (my_id == data.to) {
+            //           if (receiver_id == data.from) {
+            //               // if receiver is selected, reload the selected user ...
+            //               $('#' + data.from).click();
+            //           } else {
+            //               // if receiver is not seleted, add notification for that user
+            //               var pending = parseInt($('#' + data.from).find('.pending').html());
+
+            //               if (pending) {
+            //                   $('#' + data.from).find('.pending').html(pending + 1);
+            //               } else {
+            //                   $('#' + data.from).append('<span class="pending">1</span>');
+            //               }
+            //           }
+            //       }
+            //   });
+
+
+            /*Send Message*/
+
+            // <div class="input-text">
+            //    <input type="text" name="message" class="submit">
+            // </div>
+            $(document).on('keyup', '#message', function (e) {
+
+                var message = $(this).val();
+                // check if enter key is pressed and message is not null also receiver is selected
+
+                if (e.keyCode == 13 && message != '') {
+                    $(this).val(''); // while pressed enter text box will be empty
+                    //alert(message);
+                    var datastr = "&message=" + message;
+                    $.ajax({
+                        type: "post",
+                        url: "message/"+receiver_id, // need to create this post route
+                        data: datastr,
+                        cache: false,
+                        success: function (data) {
+
+                        },
+                        error: function (jqXHR, status, err) {
+                        },
+                        complete: function () {
+                            scrollToBottomFunc();
+                        }  
+                    })
+                }
+            });
+
+
+        });
+        $('.search_btn').click(function () {
+            $('.search_list').addClass('d-block');
+        });
+
+        $(document).mouseup(function (e) {
+            if ($(e.target).closest(".search_li").length
+                === 0) {
+                $('.search_list').removeClass('d-block');
+            }
+        });
+
+        function ajaxCsrf() {
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+        }
+
+        var baseUrl = "{{ url('/') }}";
+
+        function chatMessage(userId) { 
+	
+            //$('.user').removeClass('active');
+            //$(this).addClass('active');
+            //$('.user').removeClass('active');
+            //$(this).addClass('active');
+            // $(this).find('.pending').remove();
+
+            receiver_id = userId;
+
+            $('#add_notfi_no_' + receiver_id + ' > span').remove();
+            //alert(receiver_id);
+            ajaxCsrf();
+            $.ajax({
+                type: "post",
+                url: baseUrl + '/ajax_conversation/' + userId,
+                dataType: 'html',
+                success: function (res) {
+                    $('#Profile-menu').html(res);
+                    scrollToBottomFunc();
+                }
+            });
+        }
+		
+        function scrollToBottomFunc() {
+            $('.chat-inner').animate({
+                scrollTop: $('.chat-inner').get(0).scrollHeight
+            }, 2000);
+        }
+    </script>
+</body>
+
+</html>

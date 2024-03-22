@@ -1,0 +1,39 @@
+@font-face {
+    font-family: 'LOVEROUND';
+    src: url('LOVEROUND.eot');
+    src: url('LOVEROUND.eot?#iefix') format('embedded-opentype'),
+        url('LOVEROUND.woff2') format('woff2'),
+        url('LOVEROUND.woff') format('woff'),
+        url('LOVEROUND.ttf') format('truetype'),
+        url('LOVEROUND.svg#LOVEROUND') format('svg');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'LOVEROUND';
+    src: url('LOVEROUND_1.eot');
+    src: url('LOVEROUND_1.eot?#iefix') format('embedded-opentype'),
+        url('LOVEROUND_1.woff2') format('woff2'),
+        url('LOVEROUND_1.woff') format('woff'),
+        url('LOVEROUND_1.ttf') format('truetype'),
+        url('LOVEROUND_1.svg#LOVEROUND') format('svg');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'LOVEROUND';
+    src: url('LOVEROUND_2.eot');
+    src: url('LOVEROUND_2.eot?#iefix') format('embedded-opentype'),
+        url('LOVEROUND_2.woff2') format('woff2'),
+        url('LOVEROUND_2.woff') format('woff'),
+        url('LOVEROUND_2.ttf') format('truetype'),
+        url('LOVEROUND_2.svg#LOVEROUND') format('svg');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+

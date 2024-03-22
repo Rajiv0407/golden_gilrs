@@ -1,0 +1,150 @@
+
+@media screen and (max-width: 980px) {
+
+    .lg_login__box{
+        .container-fluid{
+            .col-md-7, .col-md-5{
+        width: 100%;}
+            .lg_login_img{
+                height: auto;
+                img{
+                    width: 125px;
+                }
+                padding: 25px 0px; background: no-repeat;
+            }
+            .admin_login{
+                width: 100%;
+                .account-logo-box{
+                    display: none;
+                }
+                .account-box{
+                    padding: 0px 0px; background: transparent;
+                }
+            }            
+        }    
+        background: url(../images/bg_img.png); background-position: center; background-repeat: no-repeat; background-size: cover;
+    }
+    
+    .grid-container{
+       display: block !important;
+
+       .Header{
+        .headerWrapper{
+            .navbar{
+                padding: 0px 0px;height: 55px;
+            }
+            .navbarContent{
+                .toggle_btn{}
+                .nav{
+                    display: flex; flex-wrap: unset; flex-direction: row;
+                    .welcome_s{
+                        display: none;
+                    }
+                    li{
+                        a{
+                            i{font-size: 18px;}
+                            span{display: none;}
+                        }
+                    }
+                }
+            }
+        }
+       }
+       .Sidebar{
+        position: fixed; inset: 0; height: 100%; width: 100%; max-width: 100%; display: block; z-index: 3; padding: 0; transition: .3s; transform: translate(-100%);
+        -webkit-transition: .5s; -moz-transition: .5s; -o-transition: .5s; background: #fff;
+        
+        .header_logo{
+            display: none;
+        }
+        .sidebarWrapper{
+            width: 100% !important; top: 55px;
+            .height_navigation{
+                overflow: auto !important;
+                li{
+                    a{
+                        padding: 15px 5px;
+                        .tooltip_nav{
+                            position: unset; opacity: 1; visibility: visible; background: transparent; padding: 0px; font-size: unset; width: fit-content; border-radius: unset;
+                            transform: unset;
+                            &::before{display: none;}
+                        }
+                    }
+                    & + li{
+                        border-left: 1px solid #333;
+                    }
+                }
+            }
+        }        
+       } 
+       &.collapse_grid_container{
+        .Sidebar{
+            transform: translate(0);
+        }
+       }
+       .main_site_data{
+        
+            .widget-head {
+                display: block; margin-bottom: 15px;
+            }
+
+            .widget-body{
+                padding: 0px 13px 0px 13px !important;
+                .leftrm{
+                    width: 100% !important; margin-bottom: 25px;
+                }
+                .rgtrm{
+                    width: 100% !important; margin-left: 0px !important; padding: 0px;
+                    .mscroll_box2{
+                        .table_min {
+                            white-space: nowrap; overflow: auto; max-height: 350px;
+                            .table-layout{}
+                            .table-layout-body{
+                                overflow: visible !important;
+                            }
+                        }
+                    }
+                }
+
+            }
+
+
+
+        .carManagement__wrapper{
+            .breadcrumbWrapper{
+                display: block !important; margin-bottom: 20px;                
+                .rightButton{
+                    width: fit-content;
+                }
+            }
+            .filterWrapper{
+                .form.filterWrapper__l{
+                    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                }
+            }
+        }
+
+        .dashbordWrapper{
+            .dashboardBox{
+                .dashCard{
+                    max-width: 100%;
+                }
+            }
+        }
+        .table-area{
+            margin-top: 15px;
+            
+            .dataTables_wrapper{
+                white-space: nowrap; overflow: auto;
+            }
+        }
+
+
+
+       }
+       .dataTables_wrapper .dataTables_paginate{
+        margin-top: 10px; margin-bottom: 65px;
+       }
+    }
+
+}

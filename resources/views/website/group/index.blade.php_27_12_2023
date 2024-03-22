@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
+    <title>Golden Girls</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="{{asset('public/website/chat/css/bootstrap.min.css')}}">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.2.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{asset('public/website/chat/css/intlTelInput.css')}}">
+	 <link rel='stylesheet' href='https://harvesthq.github.io/chosen/chosen.css'>
+    <link rel="stylesheet" href="{{asset('public/website/css/style.css')}}">
+	<link rel="stylesheet" href="http://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+	<link rel="stylesheet" href="{{asset('public/website/css/fm.selectator.jquery.css')}}">
+
+    <link href="{{ URL('/').'/public/website/group_chat/jquery.multiselect.css' }}" rel="stylesheet" type="text/css">
+</head>
+<!--  -->
+
+<body>
+    <div class="grid-container" id="web_container">
+        <header class="navbar_menu">
+            @include('includes.website.header')
+        </header>
+
+        <div class="main_cont">
+            <div class="user_prof chtmssgbx">
+                <div class="menu_section">
+                    <div class="chat_head">
+                        <div class="head">
+                            <h3>Group</h3>
+                        </div>
+                        <div class="button_bx">
+                            <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#creatgroupmodal"><i class="ri-add-line"></i> Create Group</button>
+                        </div>
+
+                    </div>
+                    
+
+
+
+                    <div class="memu_inner">
+
+                        <div class="menu_inner_list user_profile_menu chattab">
+                            <ul class="nav nav-tabs" role="tablist">
+                                @foreach($group_list as $user)
+                                <li class="nav-item " id="userList_{{ $user->id }}" role="presentation">
+                                    <button class="nav-link usrlist" id="{{ $user->id }}" data-bs-toggle="tab"
+                                        data-bs-target="#Profile-menu" onclick="chatMessage('{{ $user->id }}')"
+                                        type="button" role="tab" aria-selected="true">
+                                        <span class="nk-menu-img">
+                                            <?php if($user->groupImg!=''){ ?>
+                                           <img src="{{$user->groupImg}}">
+                                       <?php } ?>
+
+                                        </span>
+                                        <span class="nk-menu-text">
+                                            <h3 id="add_notfi_no_{{ $user->id }}">{{ $user->group_name }}                                             
+
+                                              
+                                            </h3>
+                                        </span>
+                                    </button>
+                                </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="section_right">
+                    <div class="head">
+                        <h3>Message</h3>
+                    </div>
+                    <div class="chat_dshbrd">
+
+                        <div id="Profile-menu">
+						<div class="dash_not_data">
+                            <h3>Group Dashboard </h3>
+							</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <footer class="footer_copy">
+            @include('includes.website.footer')
+        </footer>
+
+    </div>
+
+
+
+ 
+<!-- Modal -->
+<div class="modal fade modal_cust" id="creatgroupmodal" tabindex="-1" role="dialog" aria-bs-labelledby="exampleModalLabel" aria-bs-hidden="true">
+<div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-body">
+	  <form action="javascript:void(0);" method="post" id="createGroup" enctype="multipart/form-data" >
+          <div class="creatgrou_modal">
+      <h3>Create a space</h3>
+      <div class="frm_title">
+      <div class="icon_bx">
+      <label for="add_groupimg" class="add_img">
+      <div class="upload_img">
+       <img id="def_img" src="{{ URL('/').'/public/user_image/group_icon.png' }}" alt="">
+	   <img id="blah" />
+      </div>
+          <div class="plus">
+           <svg width="24px" height="24px" viewBox="0 0 24 24" class=" UB1zOd"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path><path d="M0 0h24v24H0z" fill="none"></path></svg>
+           </div>
+         <input type="file"  id="add_groupimg" name="add_groupimg" class="d-none">  
+      </label>
+      </div>
+      <div class="frm_grp">
+      <div class="">
+      <input type="text" class="form-control" id="group_name" name="group_name" placeholder="space name">
+      <span id="error_group_name" class="err"></span>
+	  </div>
+      <div class="">
+      <textarea type="text" class="form-control" id="group_description" name="group_description" placeholder="Description (optional)" maxlength="150" data-is-auto-expanding="true" ></textarea>
+	 </div>
+      </div>
+              </div>    
+            <select name="groupUser[]" multiple id="groupUser">
+                <?php foreach($user_list as $user_lists){  ?>
+                    <option value="<?php echo $user_lists->id ; ?>" data-content="<img class='email' src='https://thdoan.github.io/bootstrap-select/images/icon-chrome.png'/>" ><?php echo $user_lists->name ; ?></option>
+                <?php } ?>  
+
+            </select>  
+             <span id="error_group_user" class="err"></span>
+            <div style="margin-top: 20px;float:right; "> 
+                <button class="btn btn-primary" id="cancel_group" onclick="cancelGroup();" name="cancel">Cancel</button>
+                <button class="btn btn-primary" id="create" name="create" onclick="createGroup();">Create</button>
+                </div>
+
+      </div>
+      </form>
+	  
+       
+      </div>
+     
+    </div>
+  </div>
+</div>
+<div class="sucmssg_box" id="create_group" style="display:none">
+    <div class="btm_left_box_mdl">  
+      <div class="media"><i class="m_icon"></i></div>
+      <div class="data">
+        <h3>Success</h3>
+        <p>Group has created successfully </p> 
+        <div class="dismiss crs">
+          <button mat-icon-button="" class="crs_btn"><i aria-hidden="true" class="fa fa-times"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="{{asset('public/website/js/bootstrap.min.js')}}"></script>
+    <script src="{{asset('public/website/js/intlTelInput.min.js')}}"></script>
+    <script src="{{asset('public/website/js/utils.js')}}"></script>
+    <script src="{{asset('public/website/js/custom.js')}}"></script>
+    <script src='https://harvesthq.github.io/chosen/chosen.jquery.js'></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+	<script src="{{asset('public/website/js/custom.js')}}"></script>
+	<script src="{{asset('public/website/js/fm.selectator.jquery.js')}}"></script>
+
+
+<script src="{{ URL('/').'/public/website/group_chat/jquery.min.js' }}"></script>
+<script src="{{ URL('/').'/public/website/group_chat/jquery.multiselect.js' }}"></script>
+<script>
+   $("#blah").hide();
+  function readURL(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            $("#def_img").hide();
+			$("#blah").show();
+            reader.onload = function (e) {
+                $('#blah').attr('src', e.target.result);
+            }
+            
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+    
+    $("#add_groupimg").change(function(){
+        readURL(this);
+    });
+
+function cancelGroup(){
+    
+    $('#group_name').val('');
+    $('#group_description').val('') ;
+    $('#createGroup')[0].reset();
+    $('#groupUser').multiselect('reload');
+    $('#creatgroupmodal').modal('hide');
+     
+}
+
+
+function createGroup(){
+   var groupName = $('#group_name').val();
+   var groupDescription = $('#group_description').val() ;
+   var groupUser = $('#groupUser').val() ;
+   var options = $('#groupUser > option:selected');
+    if(groupName==''){
+		$('#error_group_name').html('Please enter group name') ;
+    }else if(options.length == 0){
+		$('#error_group_user').html('Please select group users') ;
+         return false;
+    }else if(options.length <= 2){
+		$('#error_group_user').html('Please select more than 2 users') ;
+         //alert('Please select more than 2 users.');
+         return false;
+    }
+     var formData=new FormData($('#createGroup')[0]);
+     var baseUrl = "{{ url('/') }}";
+    $.ajax({
+        type: "POST",
+        url: baseUrl +'/createGroup',
+        data:formData ,
+        dataType:'json',
+        cache: 'FALSE',
+        contentType:false,
+        processData:false,
+        beforeSend: function () { 
+        },
+        success: function(html){
+			 if(html.status==1){
+				cancelGroup();
+				$("#create_group").show();
+				setTimeout(function() {
+				   $("#create_group").hide();  
+				}, 2000);
+			$( "#web_container" ).load(window.location.href + " #web_container" );
+			
+				
+			 }        
+        }
+        });      
+   
+
+}
+
+
+
+$('#groupUser').multiselect({
+    columns: 1,
+    placeholder: 'Select User',
+    search: true,
+   
+});
+</script>
+<script>
+    $('.search_user').click(function () {
+      $('.search_user_list').addClass('d-block');
+    });
+
+    $(document).mouseup(function (e) {
+      if ($(e.target).closest(".search_li").length === 0) {
+        $('.search_user_list').removeClass('d-block');
+      }
+    });
+
+        function getTime() {
+            var dt = new Date();
+            var time = dt.getHours() + ":" + (dt.getMinutes() < 10 ? '0' : '') + dt.getMinutes();
+            return time;
+        }
+
+        var receiver_id = '';
+        var my_id = "{{ Auth::id() }}";
+        $(document).ready(function () {
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+            // Enable pusher logging - don't include this in production
+            Pusher.logToConsole = true;
+
+            var pusher = new Pusher('e9c75b86e285c511da57', {
+                cluster: 'ap2'
+            });
+
+           // var channel = pusher.subscribe('my-channel');
+             var status = my_id;  
+                var channel = pusher.subscribe(status);
+            //+ ":" + dt.getSeconds()
+            channel.bind('App\\Events\\Notify', function (data) {
+                //alert(data);
+               // alert(JSON.stringify(data));
+
+                var image_d = '';
+                var message = '';
+                if (data.message.image.length > 0) {
+                    $.each(data.message.image, function (key, image_data) {
+                        if (image_data.file_type == 'image') {
+                            image_d += '<img src=' + image_data.file + ' alt="">';
+                        }
+                        if (image_data.file_type == 'vedio') {
+                            image_d += '<video class="vdo_thmb" controls><source src=' + image_data.file + '></video>'
+                        }
+                        if (image_data.file_type == 'application') {
+                            image_d += '<embed src=' + image_data.file + ' class="img_thmb" alt="">';
+                        }
+                    });
+                } else {
+                    var image_d = '';
+                }
+
+
+                if (data.message.message != '') {
+                    //var message=data.message.message;
+                    var message = '<div class="cont_bx"><p>' + data.message.message + '</p></div>';
+                } else {
+                    var message = '';
+                }
+
+                if (data.type == 1) {
+                    //alert(data.loginUserId);
+                    $('#add_notfi_no_' + data.loginUserId).append('<span></span>')
+                }
+               // alert(my_id+' ' +data.from);
+                if (my_id == data.from) {
+                   
+                    $('#history').append('<div class="chat-mss rply-mss"><ul><li><div class="replay-mss"><div class="cont_bx"><p>'+message+'</p>'+image_d+'<div class="date"><i class="ri-time-line"></i>' + getTime() + '</div></div></div></li></ul></div>');
+                    scrollToBottomFunc();
+                } else  if (my_id == data.to){
+                   
+                    if ($('.usrlist').hasClass('active')) {
+                        var activeUsrId = $(".usrlist").filter(".active").attr("id");
+                            
+
+                        if (receiver_id == data.from && activeUsrId == data.from) {
+                           
+                            $("#userList_" + data.from).prependTo(".nav-tabs");
+                            $('#history').append('<div class="chat-mss rply-mss"><ul><li><div class="replay-mss"><div class="cont_bx"><p>'+message+'</p>'+image_d+'<div class="date"><i class="ri-time-line"></i>' + getTime() + '</div></div></div></li></ul></div>');
+                            scrollToBottomFunc();
+                        } else {
+                            //addNotification(data.from);
+                            $("#userList_" + data.from).prependTo(".nav-tabs");
+                            $('#history').append('<div class="chat-mss rply-mss"><ul><li><div class="replay-mss"><div class="cont_bx"><p>'+message+'</p>'+image_d+'<div class="date"><i class="ri-time-line"></i>' + getTime() + '</div></div></div></li></ul></div>');
+                            scrollToBottomFunc();
+                        }
+
+
+                    } else {
+                        addNotification(data.from);
+                    }
+                }
+
+                //alert(JSON.stringify(data));
+
+
+                //$("#userList_59").prependTo(".nav-tabs");
+
+            });
+
+
+            function addNotification(usrId) {
+                $("#userList_" + usrId).prependTo(".nav-tabs");
+                var existNotification = parseInt($('#add_notfi_no_' + usrId).find('.notfi_no').html());
+                if (existNotification) {
+                    $('#add_notfi_no_' + usrId).find('.notfi_no').html(existNotification + 1);
+                } else {
+                    $('#add_notfi_no_' + usrId).append('<span class="notfi_no">1</span>');
+                }
+            }
+
+            $(document).on('keyup', '#message', function (e) {
+
+                var message = $(this).val();
+                // check if enter key is pressed and message is not null also receiver is selected
+
+                if (e.keyCode == 13 && message != '') {
+                    $(this).val(''); // while pressed enter text box will be empty
+                    //alert(message);
+                    var datastr = "&message=" + message;
+                    $.ajax({
+                        type: "post",
+                        url: "group_message/" + receiver_id, // need to create this post route
+                        data: datastr,
+                        cache: false,
+                        success: function (data) {
+
+                        },
+                        error: function (jqXHR, status, err) {
+                        },
+                        complete: function () {
+                            scrollToBottomFunc();
+                        }
+                    })
+                }
+            });
+
+
+        });
+        $('.search_btn').click(function () {
+            $('.search_list').addClass('d-block');
+        });
+
+        $(document).mouseup(function (e) {
+            if ($(e.target).closest(".search_li").length
+                === 0) {
+                $('.search_list').removeClass('d-block');
+            }
+        });
+
+        function ajaxCsrf() {
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+        }
+
+        var baseUrl = "{{ url('/') }}";
+
+        function chatMessage(groupId) {
+            //$('.user').removeClass('active');
+            //$(this).addClass('active');
+            //$('.user').removeClass('active');
+            //$(this).addClass('active');
+            //$(this).find('.pending').remove();
+            receiver_id = groupId;
+            $('#add_notfi_no_' + receiver_id + ' > span').remove();
+            //alert(receiver_id);
+            ajaxCsrf();
+            $.ajax({
+                type: "post",
+                url: baseUrl + '/group_conversation/' + groupId,
+                dataType: 'html',
+                success: function (res) {
+                    $('#Profile-menu').html(res);
+                    scrollToBottomFunc();
+                }
+            });
+        }
+
+        function scrollToBottomFunc() {
+            $('.chat-inner').animate({
+                scrollTop: $('.chat-inner').get(0).scrollHeight
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
