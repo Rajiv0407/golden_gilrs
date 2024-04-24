@@ -4,6 +4,7 @@
  $StatusCustomerManagment=checkStatusRole($user_per_info,3);
  $DeleteCustomerManagment=checkDeleteRole($user_per_info,3);  
   ?> 
+  <!-- -- -->
  <div class="carManagement__wrapper">
                 <div class="breadcrumbWrapper">
                     <nav aria-label="breadcrumb">
@@ -186,22 +187,27 @@
 				{
                     "aTargets": [6],
                      "mRender": function(data, type, full){
-						 if(edit_customer_mamagment_per == 1 && delete_customer_mamagment_per==1 ){
+                      var response='' ;
+						 if(edit_customer_mamagment_per){
                         var response ='<td><div class="align-items-center d-flex"> <div class="more_n"> <i class="bi bi-three-dots-vertical" type="button" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false"></i> <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">  <li><a class="dropdown-item" href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#change_pass" onclick="changePassword('+full["id"]+')">Change Password</a></li> </ul> </div> ' ;
                         response+=' </td>'  ;
+                        // == 1 && delete_customer_mamagment_per==1 
                         // <li><a class="dropdown-item" href="javascript:void(0);" onclick="ConfirmDelete('+full['id']+')">Delete</a></li>
-						}
-						else if(edit_customer_mamagment_per == 1){
-							var response='<td> <div class="more_n"> <i class="bi bi-three-dots-vertical" type="button" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false"></i> <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink"><a class="dropdown-item" href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#change_pass" onclick="changePassword('+full["id"]+')">Change Password</a></li> </ul> </div> ' ;
-                        response+='   </td>'
-						}
-						else if(delete_customer_mamagment_per==1){
+						} else{
+              response+='';
+            }
+
+						// else if(edit_customer_mamagment_per == 1){
+						// 	var response='<td> <div class="more_n"> <i class="bi bi-three-dots-vertical" type="button" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false"></i> <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink"><a class="dropdown-item" href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#change_pass" onclick="changePassword('+full["id"]+')">Change Password</a></li> </ul> </div> ' ;
+      //                   response+='   </td>'
+						// }
+						//else if(delete_customer_mamagment_per==1){
 							// var response ='<td> <div class="more_n"> <i class="bi bi-three-dots-vertical" type="button" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false"></i> <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink"> <li><a class="dropdown-item" href="javascript:void(0);" onclick="ConfirmDelete('+full['id']+')">Delete</a></li></ul> </div> ' ;
        //                  response+=' </div> </td>'  ;
-						}else{
-							response+='';
-						}
+						//}
+           
 						 response+='<td><div> <label class="switch">' ;
+             
                         if(status_customer_managment_per==1){
                         if(full['status']=='1'){
                              response +='<input type="checkbox" onclick="changeUsrStatus('+full['id']+')" checked>' ;

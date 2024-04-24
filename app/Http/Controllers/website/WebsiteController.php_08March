@@ -4321,30 +4321,7 @@ public function postTest() {
         Cookie::queue('userName', $request->login_email, 60);
         Cookie::queue('userPassword', $request->login_password, 60);      
         } 
-		//env('PUSHER_APP_CLUSTER')
-        $options = array(
-            'cluster' => 'ap2',
-            'encrypted' => true
-            );
-		//print_r($options);die; 	 
-       /*  $pusher = new Pusher(
-                env('PUSHER_APP_KEY'),
-                env('PUSHER_APP_SECRET'),
-                env('PUSHER_APP_ID'), 
-                $options
-            ); */
-			
-			 $pusher = new Pusher(
-                'e9c75b86e285c511da57',
-                '56c0c0dd6d90996be5b9',
-                '1716502', 
-                $options
-            );
-        // notification
-        $data = ['loginUserId' =>$userId,"type"=>1]; 
-        $notify = 'my-channel';
-        //$pusher->trigger($notify, 'App\\Events\\MyEvent', $data);
-        //echo successResponse([],'login successfully');
+	
         echo 1;
    		}else{
 			

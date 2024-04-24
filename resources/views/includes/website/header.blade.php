@@ -1,8 +1,24 @@
-<?php
+<?php 
+
 $data = session()->get('user_session');
+if(!empty($data)){
+  $noti_count = notification_count($data['userId']); 
+  $noti_data = notification_list($data['userId']);
+}else{
+   $noti_count=0;
+   $noti_data=array();
+}
+
+$chatMessageCount = chatMessageNotification();
+$groupNotification= groupUnreadMessge() ;
+
+// echo "<pre>" ;
+// print_r($chatMessageCount);
+// exit ;
+
+
 ?>
-<?php $noti_count = notification_count($data['userId']); ?>
-<?php $noti_data = notification_list($data['userId']);  ?>
+
 <?php //echo "<pre>";print_r($noti_data);exit;   
 ?>
 
@@ -21,7 +37,7 @@ $data = session()->get('user_session');
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <i class="ri-menu-line"></i>
       </button>
-      <a class="navbar-brand" href="<?php echo URL('/home/') ; ?>"><img src="{{URL::to('/public/website')}}/images/logo.svg?v=<?php echo time(); ?>" alt="">
+      <a class="navbar-brand" <?php if(!empty($data)){ ?>href="<?php echo URL('/home/') ; ?>" <?php } else{ ?> href="javascript:void(0);" <?php } ?>><img src="{{URL::to('/public/website')}}/images/logo.svg?v=<?php echo time(); ?>" alt="">
         <?php 
 
         if(session()->has('defaultCountry')){ 
@@ -35,7 +51,7 @@ $data = session()->get('user_session');
       <p class="sel_country" id="ggCountrId"><?php echo $defaultCountry ; ?></p>
       </a>
     </div>
-
+ <?php if(!empty($data)){ ?> 
     <div class="navmenu collapse navbar-collapse nav_menu" id="navbarSupportedContent">
 
       <div class="mobile-header">
@@ -57,7 +73,7 @@ $data = session()->get('user_session');
       <input type="hidden" name="user_ids" id="user_ids" value="<?php echo !empty(request()->segment(2)) ? request()->segment(2) : $data['userId']; ?>">
 
       <div>
-
+       
         <ul class="navbar-nav me-auto mb-2 mb-lg-0" id="golden_header_bar">
           <li class="nav-item">
             <a class="nav-link <?php if (request()->segment(1) == 'home') {
@@ -79,12 +95,16 @@ $data = session()->get('user_session');
           <li class="nav-item">
             <a class="nav-link <?php if (request()->segment(1) == 'group') {
                                   echo 'active';
-                                } ?>" href="{{URL::to('/')}}/group">Groups</a>
+                                } ?>" href="{{URL::to('/')}}/group">Groups <?php if($groupNotification > 0){ ?>
+                                <span class="nt_icon_n"><?php echo $groupNotification ; ?></span> <?php } ?></a>
           </li>
           <li class="nav-item">
             <a class="nav-link <?php if (request()->segment(1) == 'message') {
                                   echo 'active';
-                                } ?>" href="{{URL::to('/')}}/message">Message</a>
+                                } ?>" href="{{URL::to('/')}}/message">Message
+                                <?php if($chatMessageCount > 0){ ?>
+                                <span class="nt_icon_n"><?php echo $chatMessageCount ; ?></span> <?php } ?></a>
+                             
           </li>
           <li class="nav-item">
             <a class="nav-link mobile_view"  href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#aboutdetails" >About Info</a>
@@ -111,6 +131,7 @@ $data = session()->get('user_session');
             <a class="nav-link mobile_view"  href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#Serach_post">Search</a>
           </li>
         </ul>
+
       </div>
 
     </div>
@@ -296,6 +317,7 @@ $data = session()->get('user_session');
         </div>
 
       </div>
+    <?php } ?>
     </div>
 
   </nav>
@@ -303,10 +325,15 @@ $data = session()->get('user_session');
 
 </div>
   
+<!-- About info -->
 
+
+
+<!--  end -->
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 <script>
   var searchRequest = null;
+
   $(document).ready(function() {
     $('.search_btn').click(function() {
       $('.search_list').addClass('d-block');
@@ -318,6 +345,11 @@ $data = session()->get('user_session');
         $('.search_list').removeClass('d-block');
       }
     });
+
+      if(!window.matchMedia("(max-width: 767px)").matches){
+
+ 
+  
     if ($('.form-control-wrap .form-control').length) {
       $(".form-control-wrap .form-control").on('click', function() {
         $(".search_tags").fadeToggle();
@@ -329,10 +361,12 @@ $data = session()->get('user_session');
           $('.search_box').removeClass('show');
         }
       });
-    }
+    }    
+  }
 
 
-    var minlength = 3;
+
+    var minlength = 2;
 
     $("#search_user").keyup(function() {
 
@@ -342,15 +376,17 @@ $data = session()->get('user_session');
       }
 
       if (value.length >= minlength) {
-        if (searchRequest != null)
-          searchRequest.abort();
-        searchRequest = $.ajax({
+        $('#search_loader_spineer').show();
+        //if (searchRequest != null)
+         // searchRequest.abort();
+       $.ajax({
           type: "POST",
           url: baseUrl + '/serach',
           data: "search=" + value,
-          async:false,
+          async:true,
           success: function(res) {
-
+            $('#search_loader_spineer').hide();
+             
             if (res.length > 0) {
               $('#user_search_inner').html("");
 
@@ -383,6 +419,7 @@ $data = session()->get('user_session');
               $('#user_search_inner').html('<div class="notify_bx"><div class="no_record_box"><div class="media"><img src="{{URL::to("/public/website")}}/images/no_record/c_norecrd.png" alt=""> </div><p>User Not found</p></div></div>');
 
             }
+
           }
         });
       }
@@ -424,7 +461,7 @@ $data = session()->get('user_session');
   /* function serach() {
     ajaxCsrf();
     var search = $('#search_user').val();
-    var user_id = '<?php echo $data['userId']; ?>';
+    var user_id = '<?php //echo $data['userId']; ?>';
     //alert(user_id);
     $('.err').html('');
     if (search == '') {

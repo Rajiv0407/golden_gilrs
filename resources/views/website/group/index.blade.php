@@ -15,29 +15,41 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@2.2.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="{{asset('public/website/chat/css/intlTelInput.css')}}">
 	 <link rel='stylesheet' href='https://harvesthq.github.io/chosen/chosen.css'>
-    <link rel="stylesheet" href="{{asset('public/website/css/style.css?v=123')}}">
+    <link rel="stylesheet" href="{{asset('public/website/css/style.css?v=').time()}}">
 	<link rel="stylesheet" href="http://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
 	<link rel="stylesheet" href="{{asset('public/website/css/fm.selectator.jquery.css')}}">
 
     <link href="{{ URL('/').'/public/website/group_chat/jquery.multiselect.css' }}" rel="stylesheet" type="text/css">
-    <link rel="stylesheet" href="{{asset('public/website/css/responsive.css')}}">
+    <link rel="stylesheet" href="{{asset('public/website/css/responsive.css?v=').time()}}">
      <link rel="icon" href="{{URL::to('/public/admin')}}/images/fav.png?v={{ time() }}">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />
 </head>
-<!--  -->
+<!--  --->
 
 <body>
+   <?php  $mobileDeduct=isMobileDev();  ?>
     <div class="grid-container" id="web_container">
+        
+         <?php if(!$mobileDeduct){ ?> 
         <header class="navbar_menu">
             @include('includes.website.header')
         </header>
+      <?php } ?>
         <!--  -->
         <div class="main_cont">
             <div class="user_prof chtmssgbx">
                 <div class="menu_section">
                     <div class="chat_head">
+                       <?php if(!$mobileDeduct){ ?> 
                         <div class="head">
                             <h3>Group</h3>
                         </div>
+                      <?php } else { ?> 
+                        <div class="head_mobile ">
+                           <button type="button" onclick="redirectHomepage()"><i class="ri-arrow-left-s-line"></i></button>
+                           <h3>Group</h3>
+                        </div>
+                      <?php } ?>
                         <div class="button_bx">
                             <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#creatgroupmodal"><i class="ri-add-line"></i> Create Group</button>
                         </div>
@@ -55,7 +67,7 @@
                                 @foreach($group_list as $user)
                                 <li class="nav-item " id="userList_{{ $user->id }}" role="presentation">
                                     <button class="nav-link usrlist" id="{{ $user->id }}" data-bs-toggle="tab"
-                                        data-bs-target="#Profile-menu" onclick="chatMessage('{{ $user->id }}')"
+                                        data-bs-target="#Profile-menu" data-id="{{ $user->id }}" onclick="chatMessage('{{ $user->id }}')"
                                         type="button" role="tab" aria-selected="true">
                                         <span class="nk-menu-img">
                                             <?php if($user->groupImg!=''){ ?>
@@ -106,10 +118,19 @@
             </div>
 
         </div>
-
+          <?php if(!$mobileDeduct){ ?> 
         <footer class="footer_copy">
             @include('includes.website.footer')
         </footer>
+      <?php } else { ?> 
+
+            <div id="loader_spineer" style="display:none;">
+            <div class="loader_bx">
+            <span class="loader_inner"> </span>
+            </div>
+            </div>
+
+        <?php } ?>
 
     </div>
 
@@ -134,7 +155,7 @@
           <div class="plus">
            <svg width="24px" height="24px" viewBox="0 0 24 24" class=" UB1zOd"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path><path d="M0 0h24v24H0z" fill="none"></path></svg>
            </div>
-         <input type="file"  id="add_groupimg" name="add_groupimg" class="d-none">  
+         <input type="file"  id="add_groupimg" name="add_groupimg" class="d-none" accept="image/png, image/gif, image/jpeg">  
       </label>
       </div>
       <div class="frm_grp">
@@ -172,6 +193,10 @@
 </div>
 <!-- end -->
 
+<!-- Update Group Detail -->
+
+
+<!-- End -->
 <!-- add Group member -->
 <div class="modal fade modal_cust" id="addGroupMembermodal" tabindex="-1" role="dialog" aria-bs-labelledby="exampleModalLabel" aria-bs-hidden="true">
 <div class="modal-dialog modal-dialog-centered" role="document">
@@ -212,13 +237,13 @@
     <script src="{{asset('public/website/js/bootstrap.min.js')}}"></script>
     <script src="{{asset('public/website/js/intlTelInput.min.js')}}"></script>
     <script src="{{asset('public/website/js/utils.js')}}"></script>
-    <script src="{{asset('public/website/js/custom.js')}}"></script>
+    <script src="{{asset('public/website/js/custom.js?v=1234')}}"></script>
     <script src='https://harvesthq.github.io/chosen/chosen.jquery.js'></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
-	<script src="{{asset('public/website/js/custom.js')}}"></script>
-	<script src="{{asset('public/website/js/fm.selectator.jquery.js')}}"></script>
 
+	<script src="{{asset('public/website/js/fm.selectator.jquery.js')}}"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
 
 <script src="{{ URL('/').'/public/website/group_chat/jquery.min.js' }}"></script>
 <script src="{{ URL('/').'/public/website/group_chat/jquery.multiselect.js' }}"></script>
@@ -366,13 +391,13 @@ function createGroup(){
     }else if(options.length == 0){
 		$('#error_group_user').html('Please select group users') ;
          return false;
-    }
+    }else{
     // else if(options.length <= 2){
 	// 	// $('#error_group_user').html('Please select more than 2 users') ;
     //      //alert('Please select more than 2 users.');
     //      return false;
     // }
-
+    $('#loader_spineer').show();
      var formData=new FormData($('#createGroup')[0]);
      var baseUrl = "{{ url('/') }}";
     $.ajax({
@@ -386,6 +411,7 @@ function createGroup(){
         beforeSend: function () { 
         },
         success: function(html){
+          $('#loader_spineer').hide();
 			 if(html.status==1){
 				cancelGroup();
 				$("#create_group").show();
@@ -398,7 +424,7 @@ function createGroup(){
 			 }        
         }
         });      
-   
+   }
 
 }
 
@@ -437,9 +463,9 @@ $('#groupUser').multiselect({
                 }
             });
             // Enable pusher logging - don't include this in production
-            Pusher.logToConsole = true;
-
-            var pusher = new Pusher('e9c75b86e285c511da57', {
+            ///Pusher.logToConsole = true;
+             var appKey='<?php echo $APP_KEY ; ?>' ;
+            var pusher = new Pusher(appKey, {
                 cluster: 'ap2'
             });
 
@@ -449,20 +475,17 @@ $('#groupUser').multiselect({
             //+ ":" + dt.getSeconds()
             channel.bind('App\\Events\\Notify', function (data) {
                 //alert(data);
-                //alert(JSON.stringify(data));    
-    
+              
                 var image_d = '';
                 var message = '';
                 if(data.message.image.length > 0){
 
 					 $.each(data.message.image, function (key, image_data) {
                      if(image_data.file_type == 'image'){						 
-					 image_d +='<div class="media_img"><img src=' + image_data.file + ' alt="" class="img_thmb"></div>';
-					 }
-					 if(image_data.file_type == 'video'){  
-                      image_d+='<div class="media_video"><video width="300" height="200" class="vdo_thmb" controls><source  src=' + image_data.file + '></video></div>'						 
-					 }
-					 if(image_data.file_type=='application'){						 
+					 image_d +='<div class="media_img"><a href=' + image_data.file + ' data-fancybox="gallery" data-caption=""><img src=' + image_data.file + ' alt="" class="img_thmb"></a></div>';
+					 }else if(image_data.file_type == 'video'){  
+                      image_d+='<div class="media_video"><a data-fancybox="group-1" href=' + image_data.file + '><video width="300" height="200" class="vdo_thmb" controls><source  src=' + image_data.file + '></video></a></div>'						 
+					 }else if(image_data.file_type=='application'){						 
 					 image_d +='<div class="media_pdf"><embed src=' + image_data.file + '  alt=""></div>';
 					 }  
 					}); 
@@ -476,32 +499,39 @@ $('#groupUser').multiselect({
                     var message =data.message.message;
                 } else {
 
-                    if (message == '' && filesToUploadImg.length==0 && filesToUploadVideo.length==0 && filesToUploadFile.length==0) {
-                    $('#err_message').html('Please enter message.');
-                    setTimeout(function(){
-                         $('#err_message').html('');
-                    },1000);
-                    return false ;
-                    } 
+                    // if (message == '' && filesToUploadImg.length==0 && filesToUploadVideo.length==0 && filesToUploadFile.length==0) {
+                    // $('#err_message').html('Please enter message.');
+                    // setTimeout(function(){
+                    //      $('#err_message').html('');
+                    // },1000);
+                    // return false ;
+                    // } 
 
                 }
 
-                if (data.type == 1) {
-                    //alert(data.loginUserId);
-                    $('#add_notfi_no_' + data.loginUserId).append('<span></span>')
-                }
+                 var activeUsrId = $(".usrlist").filter(".active").attr("id");
+
+                // if (data.type == 1 ) {
+                //     //alert(data.loginUserId);
+                //     $('#add_notfi_no_' + data.from).append('<span></span>')
+                // }
+               
+                
                //alert(my_id+' ' +data.from);
-               if(data.message_type==2){
+               if(data.message_type==2 && activeUsrId==data.from){
                  $('#history').append('<div class="message-notif"><p>'+message+'</p></div>');
                      scrollToBottomFunc();
-               }else if (my_id != data.to) { 
+               }else if (my_id != data.to && activeUsrId==data.from) { 
                     
-                    $('#history').append('<div class="chat-mss"><ul><li><span><img src="'+data.message.fromImg+'" alt=""></span><div class="replay-mss"><div class="cont_bx"><p>'+message+'</p><div class="list_media">'+image_d+'</div><div class="date">' + getTime() + '</div></div></div></li></ul></div>');
+
+                    $('#history').append('<div class="chat-mss"><ul><li><span class="chat_user_nme"><img src="'+data.message.fromImg+'" alt=""><span>'+data.sender_name+'</span></span><div class="replay-mss"><div class="cont_bx"><p>'+message+'</p><div class="list_media">'+image_d+'</div><div class="date">' + getTime() + '</div></div></div></li></ul></div>');
+
                      scrollToBottomFunc();
+
                 } else  if (my_id == data.to){
 
                     if ($('.usrlist').hasClass('active')) {
-                        var activeUsrId = $(".usrlist").filter(".active").attr("id");
+                        
                         if (receiver_id == data.from && activeUsrId == data.from) {
                            
                             $("#userList_" + data.from).prependTo(".nav-tabs");
@@ -519,6 +549,8 @@ $('#groupUser').multiselect({
                     } else {
                         addNotification(data.from);
                     }
+                }else{
+                  addNotification(data.from);
                 }
 
                 //alert(JSON.stringify(data));
@@ -530,6 +562,7 @@ $('#groupUser').multiselect({
 
 
             function addNotification(usrId) {
+              
                 $("#userList_" + usrId).prependTo(".nav-tabs");
                 var existNotification = parseInt($('#add_notfi_no_' + usrId).find('.notfi_no').html());
                 
@@ -696,6 +729,9 @@ $('#groupUser').multiselect({
             });
       }
 
+  function redirectHomepage(){
+           window.location.href =baseUrl;
+        }
 
   function cancelLeaveGroup(){
     $('#leave-group').modal('hide');

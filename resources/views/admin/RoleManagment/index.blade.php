@@ -1,3 +1,10 @@
+<?php $session_data=session()->get('admin_session');
+ $user_per_info=user_permission($session_data['userId']);          
+ 
+ $EditGoodiesManagment=checkEditRole($user_per_info,2);   
+
+ 
+ ?>
 <div class="widget-head heading_bx">
     <div class="breadcrumbWrapper d-flex align-items-center justify-content-between">
         <nav aria-label="breadcrumb">
@@ -5,8 +12,8 @@
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="<?php echo URL('/'); ?>/administrator/dashboard#index"
                         onclick="dashboard()">Home</a></li>
-                <li class="breadcrumb-item"><a href="<?php echo URL('/'); ?>/administrator/dashboard#index"
-                        onclick="dashboard()">Admin Users Management</a></li>
+                <li class="breadcrumb-item"><a href="<?php echo URL('/'); ?>/administrator/dashboard#admin_users"
+                        onclick="adminUserManagement()">Admin Users Management</a></li>
 
                 <li class="breadcrumb-item active" aria-current="page">Role Management</li>
             </ol>
@@ -43,10 +50,12 @@
                                 href="javascript:void(0)" style="color: #000;">
                                 <?php echo $role_types['title']; ?>
                             </a>
+                            <?php if($EditGoodiesManagment==1){ ?>
                             <a onclick="editRole(<?php echo $role_types['id']; ?>);" href="javascript:void(0)"
                                 data-bs-toggle="modal" data-bs-target="#edit_role" style="color: #feb636;">
                                 <i class="ri-edit-box-line"></i>
                             </a>
+                        <?php } ?>
 
                         </div>
                         <?php } ?>

@@ -273,7 +273,7 @@ public function createThumbnail($path, $width, $height)
 	 public function editEventFeeType(Request $request){
 
           $updatedId = isset($request->updatedId)?$request->updatedId:0 ;
-           $feeTypeInfo = fee_type::where('id',$updatedId)->first() ;
+           $feeTypeInfo = DB::table('fee_type')->where('id',$updatedId)->first() ;
            //echo "<pre>";print_r($eventTypeInfo);die; 
            $data['eventTypeInfo'] = $feeTypeInfo ;
            $data['updatedId']=$updatedId ;
@@ -292,7 +292,7 @@ public function createThumbnail($path, $width, $height)
                 "fee_type"=>$edit_event_fee_type,
 				"status"=>$edit_fee_status
             ) ;
-              fee_type::where('id',$updateId)->update($updateData) ;
+              DB::table('fee_type')->where('id',$updateId)->update($updateData) ;
               echo successResponse([],'successfully updated Event fee type'); 
         }
          catch(\Exception $e){
@@ -304,7 +304,7 @@ public function createThumbnail($path, $width, $height)
 
         $deleteId=isset($request->id)?$request->id:'' ;
         try{
-                fee_type::where('id', $deleteId)->delete();
+                DB::table('fee_type')->where('id', $deleteId)->delete();
 
               echo successResponse([],'successfully deleted'); 
         }

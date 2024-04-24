@@ -49,6 +49,7 @@
                                 <option value="1">Pending</option>
                                 <option value="2">Accepted</option>
 								                <option value="3">Cancel</option>
+                                <option value="4">Cancelled By Customer</option>
                             </select>  
                         </div>
                         <div class="d-flex">  
@@ -159,6 +160,24 @@
     </div>
 </div>
 
+      <div class="modal fade basic_infofrom" id="cancel_bookingInfo" tabindex="-1" role="dialog"
+    aria-bs-labelledby="exampleModalCenterTitle" aria-bs-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cancel Reason</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-bs-label="Close">
+                    <img src="{{URL::to('/public/website')}}/images/icon/close_button.png" alt="">
+                </button>
+            </div>
+            <div class="modal-body">
+               
+                <h6 id="cancelR"><?php //echo $reason ; ?></h6>                
+            </div>
+        </div>
+    </div>
+</div>
+
 <script type="text/javascript">
 
      $(document).ready(function($k){
@@ -199,14 +218,24 @@
                             "mRender" : function(data, type, full){ 
                               var action='' ;
                                var className='' ;
+                               var infoIcon=''; 
+
                             if(full['status']==1){
                               className='inactiveNFor' ;
                             }else if(full['status']==2){
 								className='activeNFor' ;
-							}else{
+							}else if(full['status']==4){
+                className='inactiveNFor' ;
+                var r=full['cancel_reason'] ;
+                infoIcon='<a  href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#cancel_bookingInfo" onclick="cancelReason(\''+full["cancel_reason"]+'\')"><img src="<?php echo URL('/').'/public/website/images/information-button.png' ; ?>" height="15px" width="15px"></a>'; 
+              }
+              else{
                               className='inactiveNFor' ;
                             }
-                            action+='<span class="'+className+'">'+full['status_']+'</span>';
+
+
+
+                            action+='<div class="status_notif"><span class="'+className+'">'+full['status_']+'</span>'+infoIcon+'</div>';
 
                             return action ;
                             }
@@ -237,8 +266,11 @@
 					  {
                       "aTargets": [8],
                       "visible":false 
+                       } ,
+                         {
+                      "aTargets": [9],
+                      "visible":false 
                        } 
-                        
                         ],  
 
                     ajax: {
@@ -253,7 +285,8 @@
                         { data:'booking_request_date' },
                         { data:'status_' } ,
                         { data:'status' },
-                        { data:'booking_date' }
+                        { data:'booking_date' },
+                        { data:'cancel_reason'},
 								 
 								
                   ],
@@ -503,5 +536,9 @@
 		  }
 
 
+      function cancelReason(text){
+        
+        $('#cancelR').html(text);
+      }
 
 </script>

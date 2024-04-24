@@ -20,9 +20,11 @@ class checkUserLogin extends Middleware
     public function handle($request, Closure $next)
     {
         if (Auth::check()) {
-            return $next($request);
+           return $next($request);
+          
         }else{
-             return redirect('/');
+             
+            return redirect('/');
         }
       
     }

@@ -10,8 +10,21 @@
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.0/font/bootstrap-icons.css">
       <link rel="icon" href="{{URL::to('/public/admin')}}/images/fav.png?v={{ time() }}" >
       <meta name="csrf-token" content="{{ csrf_token() }}"> 
+      <script type="text/javascript" src="https://code.jquery.com/jquery.min.js"></script>
    </head>
    <body>
+    <script type="text/javascript">
+          jQuery(function ($) {
+            document.title = 'Admin Login';
+       
+    });
+
+
+         window.location.hash="no-back-button";
+    window.location.hash="Again-No-back-button";
+    window.onhashchange=function(){window.location.hash="no-back-button";}
+     
+    </script>
     <section class="lg_login__box">
       <div class="container-fluid">
         <div class="row">
@@ -100,6 +113,8 @@
     </section>
 
       <script type="text/javascript">
+
+
          function loginValidation(){   
          
                  var txtUserName = document.loginform.txtUserName.value;
@@ -140,13 +155,20 @@
                  $('#error_txtfusername').html('');
            }
          
+
+
+function ajaxCsrf() {
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+}
+
+
          function loginchk() {
-         $.ajaxSetup({
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            }
-         });
-         
+       
+          ajaxCsrf();
          var baseUrl = "{{ url('/') }}";
          $.ajax({
          type: "POST",
@@ -162,13 +184,21 @@
          if (res.trim()=='fail')
          {
 			 $("#error_invalidpass").html('Incorrect username or Password');
-       setTimeout(function(){
-                  $('#error_invalidpass').remove();
-                }, 3000);  
+       
+         }else if(res.trim()=='deleted'){
+           $("#error_invalidpass").html('User does not exist.');
+         }else if(res.trim()=='inactive'){
+           $("#error_invalidpass").html('User is inactive.Please contact to Admin.');
          }
          else{
-            window.location = baseUrl + '/administrator/dashboard#index';   
+            window.location.reload();
+            //= baseUrl + '/administrator/dashboard#index';   
          }
+
+         setTimeout(function(){
+                  $('#error_invalidpass').html('');
+                },1000);  
+
                  }
              });
          }
@@ -178,5 +208,7 @@
       <script src="{{URL::to('/public/admin/js')}}/bootstrap.min.js" type="text/javascript"></script>
       <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"></script>
       <script src="{{URL::to('/public/admin/js')}}/custom.js" type="text/javascript"></script>
+       
+
    </body>
 </html>

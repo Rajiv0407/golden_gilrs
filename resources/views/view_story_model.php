@@ -24,7 +24,7 @@
          
          
         </div>
-         <?php if($storys['session_id'] == $storys['story_user_id']){ ?>
+         <?php if($storys['session_id'] == $storys['story_user_id'] && isset($storys['viewSotry']) &&$storys['viewSotry'] > 0){ ?>
           <div class="stry_lk">
           <div class="slbx">
           <button type="button" class="btn" onclick="story_like_model(<?php echo $storys['id']; ?>)">

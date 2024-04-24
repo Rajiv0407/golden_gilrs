@@ -500,7 +500,7 @@
       </div>
     </div>
   </div>
-  <!--End story image delete  model-->.
+  <!--End story image delete  model-->
 
   <!-- Delete Success Modal -->
   <div class="sucmssg_box" id="story_success_delete" style="display:none">

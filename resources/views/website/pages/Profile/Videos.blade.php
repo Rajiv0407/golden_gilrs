@@ -14,16 +14,21 @@
              </div>
            <?php } ?>
           </div>
+          
       <div class="list_stories abt_video" id="profile_photo_listing">
 
         <?php foreach($post_image as $post_images){ ////echo "<pre>";print_r($post_images); ?>
         <div class="gallary_img" id="delete_img_<?php echo $post_images->id ;  ?>">
+         <a data-fancybox="group-1" href="<?php echo $post_images->image.'#t=0.1'; ?>">
           <video width="100%" height="180" controls poster="<?php echo $post_images->thumbnail; ?>">
             <source src="<?php echo $post_images->image.'#t=0.1'; ?>" type="video/mp4">
           </video>
+          </a>
+          <?php if($post_images->user_id==$data['loginUserId']){ ?>
           <div class="photo_del" onclick="deleteVideo(<?php echo $post_images->id ;  ?>)">
                 <i class="ri-delete-bin-line"></i>
               </div>
+            <?php } ?>
         </div>
         <?php } ?>
       </div>

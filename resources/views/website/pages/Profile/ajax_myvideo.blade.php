@@ -4,9 +4,11 @@
           <video width="100%" height="180" controls poster="<?php echo $post_images->thumbnail; ?>">
             <source src="<?php echo $post_images->image.'#t=0.1'; ?>" type="video/mp4">
           </video>
+           <?php if($post_images->user_id==$data['loginUserId']){ ?>
           <div class="photo_del" onclick="deleteVideo(<?php echo $post_images->id ;  ?>)">
                 <i class="ri-delete-bin-line"></i>
               </div>
+            <?php } ?>
         </div>
             <?php } ?> 
          

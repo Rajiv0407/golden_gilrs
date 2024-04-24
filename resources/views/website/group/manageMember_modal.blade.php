@@ -1,10 +1,10 @@
 
    <div class="modal-header ">
-                <h5 class="modal-title" id="manage-membersLabel"><?php echo isset($group->group_name)?$group->group_name:'' ; ?> </h5>
+                <h5 class="modal-title" id="manage-membersLabel"><button class="back_page" type="button" data-bs-dismiss="modal" aria-label="Close"><i class="ri-arrow-left-s-line"></i></button> <?php echo isset($group->group_name)?$group->group_name:'' ; ?> </h5>
                 <p><?php echo isset($groupMember)?$groupMember:'' ; ?> members</p>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                <!-- <button type="button" class="close" >
                     <img src="{{URL::to('/public/website')}}/images/icon/close_button.png" alt="">
-                </button>
+                </button> -->
             </div>   
              
           <div class="modal-body">

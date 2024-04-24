@@ -35,6 +35,9 @@ if($appImg!=''){
 }else{
     $imgPath_ = $imgPath ;
 }    
+
+$reason=isset($book_info['cancel_reason'])?$book_info['cancel_reason']:'' ;
+
  ?>
   <div class="carManagement__wrapper">
     <div class="breadcrumbWrapper">
@@ -75,6 +78,9 @@ if($appImg!=''){
 								<?php }else{ ?>
 								<span style="color:red"><?php echo  $book_info['status_']; ?></span>
 								<?php } ?>
+                                <a  href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#cancel_bookingInfo" >
+                                <img src="<?php echo URL('/').'/public/website/images/information-button.png' ; ?>" height="15px" width="15px">
+                            </a>
                             </p>
                         </div>
                        
@@ -215,6 +221,25 @@ if($appImg!=''){
                     </div>
                 </div>
             </div>
+
+
+            <div class="modal fade abut_editfrom" id="cancel_bookingInfo" tabindex="-1" role="dialog"
+    aria-bs-labelledby="exampleModalCenterTitle" aria-bs-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cancel Reason</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-bs-label="Close">
+                    <img src="{{URL::to('/public/website')}}/images/icon/close_button.png" alt="">
+                </button>
+            </div>
+            <div class="modal-body">
+               
+                <h6><?php echo $reason ; ?></h6>                
+            </div>
+        </div>
+    </div>
+</div>
 			<script type="text/javascript">
 				$(document).ready(function(){
 					var userId ='<?php echo $userId ; ?>' ;

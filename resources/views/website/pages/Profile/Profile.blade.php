@@ -411,10 +411,15 @@
  
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>        
-    <link rel="stylesheet" href="https://unpkg.com/dropzone/dist/dropzone.css" />
-    <link href="https://unpkg.com/cropperjs/dist/cropper.css" rel="stylesheet"/>
-    <script src="https://unpkg.com/dropzone"></script>
-    <script src="https://unpkg.com/cropperjs"></script>
+       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.css">
+    <!-- <link href="https://unpkg.com/cropperjs/dist/cropper.css" rel="stylesheet"/> -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"></script>
+
+    <!-- <script src="https://unpkg.com/cropperjs"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+
 
 <script type="text/javascript">
   
@@ -471,6 +476,7 @@ $('#imageCropType').val(0);
   });
 
   $modal.on('shown.bs.modal', function() {
+    // var image = $('#BannerUpload');
     cropper = new Cropper(image, {
      aspectRatio: 1,
       viewMode: 3,
@@ -480,6 +486,13 @@ $('#imageCropType').val(0);
     //   height:1024,
     // },
     });
+
+  //    var cropper = image.cropper({
+  //   aspectRatio: 1,
+  //    aspectRatio: 1,
+  //     viewMode: 3,
+  //     preview:'.preview',
+  // });
   }).on('hidden.bs.modal', function(){
     cropper.destroy();
       cropper = null;

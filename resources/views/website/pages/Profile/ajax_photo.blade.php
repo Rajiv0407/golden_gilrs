@@ -4,9 +4,11 @@
               <a href="<?php echo $post_images->image; ?>" data-fancybox="gallery" data-caption="">
                 <img src="<?php echo $post_images->image; ?>" alt="">
               </a>
+               <?php if($data['user_id']==$data['loginUserId']){ ?>
               <div class="photo_del" onclick="deletePhoto(<?php echo $post_images->id ;  ?>,<?php echo $post_images->deleteType ; ?>)">
                 <i class="ri-delete-bin-line"></i>
               </div>
+            <?php } ?>
             </div>
             <?php } ?> 
          

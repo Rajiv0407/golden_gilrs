@@ -1,3 +1,42 @@
+ <?php 
+
+$session_data=session()->get('admin_session');
+ $user_per_info=user_permission($session_data['userId']);  
+
+// echo "<pre>";
+// print_r($user_per_info) ;
+
+// exit ;  
+
+  $dashboard=checkRole($user_per_info,1);
+
+  $AdminUser=checkRole($user_per_info,2);
+
+  $CustomerManagement=checkRole($user_per_info,3);
+
+  $EventManagement=checkRole($user_per_info,4);
+
+  //$CouponManagement=checkRole($user_per_info,5);
+  $GoodiesManagement=checkRole($user_per_info,6);
+
+  $BookingManagement=checkRole($user_per_info,7);
+  $EventBookingManagement=checkRole($user_per_info,11);
+  $GoodiesBookingManagement=checkRole($user_per_info,12);
+
+
+    
+  $CMS=checkRole($user_per_info,8);
+  $TermConditions=checkRole($user_per_info,13); 
+  $PrivacyPolicy=checkRole($user_per_info,14);
+
+  $Master=checkRole($user_per_info,9);
+
+  $eventType=checkRole($user_per_info,15);
+  $eventFeeType=checkRole($user_per_info,16);
+  
+   //echo $EventBookingManagement;die;
+ 
+?>
  <script type="text/javascript">
 
 jQuery(document).ready(function ($) {
@@ -14,6 +53,25 @@ if (toBactive == hash) {
 
 }});
    /* end */
+    function adminHome(){
+       
+        ajaxCsrf();
+        mobileMenuHide();
+        $.ajax({
+        type: "POST",
+        url: baseUrl+'/administrator/home',
+        cache: 'FALSE',
+        beforeSend: function () {
+        ajax_before();
+        },
+        success: function(html){
+        ajax_success() ;
+        $('.main_site_data').html(html);
+
+        }
+
+        });
+    }
 
 $('#letsgo_sidebar').find('li a').click(function(){
    
@@ -47,24 +105,73 @@ $('#letsgo_sidebar').find('li a').click(function(){
             notificationFor();
         }    
         
-        if(res[0]=='#event_type'){
-            eventtypeList();
+         if(res[0]=='#index'){
+            var check='<?php echo $dashboard ; ?>' ;
+            if(check!=1){
+              adminHome();
+              return false ;
+            }else{
+               dashboard();
+            }
+            
         } 
+
+
+        if(res[0]=='#event_type'){
+
+           var check='<?php echo $eventType ; ?>' ;
+            if(check!=1){
+              adminHome();
+              return false ;
+            }else{
+               eventtypeList();
+            }
+
+        } 
+
 		if(res[0]=='#event_fee_type'){
-            eventfeetypeList();
+             var check='<?php echo $eventFeeType ; ?>' ;
+            if(check!=1){
+              adminHome();
+              return false ;
+            }else{
+                eventfeetypeList();
+            }
+           
         } 
 		if(res[0]=='#admin_users'){
-            adminUserManagement();   
+        var check='<?php echo $AdminUser ; ?>' ;
+            if(check!=1){
+              adminHome();
+              return false ;
+            }else{
+               adminUserManagement();   
+            }
+            
         }
 		
 		if(res[0]=='#user_detail')
         {  
-          user_detail(res[1]);   
+           var check='<?php echo $CustomerManagement ; ?>' ;
+            if(check!=1){
+              adminHome();
+              return false ;
+            }else{
+               user_detail(res[1]);   
+            }
+         
         }
 		
 		if(res[0]=='#customer_detail')
         {  
-          customer_detail(res[1]);     
+           var check='<?php echo $CustomerManagement ; ?>' ;
+            if(check!=1){
+              adminHome();
+              return false ;
+            }else{
+               customer_detail(res[1]);     
+            }
+          
         }
 		
 		if(res[0]=='#event_booking_detail')
@@ -77,96 +184,123 @@ $('#letsgo_sidebar').find('li a').click(function(){
           goodies_booking_detail(res[1]);         
         }		
 		
+
 		if(res[0]=='#role'){
             roleManagment();     
         }
+
 		if(res[0]=='#customer_management'){
-            customerManagement(); 
+
+       var check='<?php echo $CustomerManagement ; ?>' ;
+            if(check!=1){
+              adminHome();
+              return false ;
+            }else{
+               customerManagement();  
+            }
+            
         }
+
         if(res[0]=='#event'){
-            eventList();
+           var check='<?php echo $EventManagement ; ?>' ;
+            if(check!=1){
+              adminHome();
+              return false ;
+            }else{
+                eventList();
+            }
+            
+           
         }	
-       if(res[0]=='#coupon'){  
-            couponList();
-        }
-		if(res[0]=='#booking'){    
-            bookingList();  
-        }
+       // if(res[0]=='#coupon'){  
+       //      couponList();
+       //  }
+		// if(res[0]=='#booking'){    
+  //           bookingList();  
+  //       }
 		if(res[0]=='#eventbooking'){    
-            eventBookingRequest(); 		   
+
+          var check='<?php echo $EventBookingManagement ; ?>' ;
+            if(check!=1){
+              adminHome();
+              return false ;
+            }else{
+                eventBookingRequest();      
+            }
+            
         }
 		if(res[0]=='#goodiesbooking'){ 		
-            goodiesBookingRequest(); 
+            
+      var check='<?php echo $GoodiesBookingManagement ; ?>' ;
+            if(check!=1){
+              adminHome();
+              return false ;
+            }else{
+                goodiesBookingRequest(); 
+            }
            		
         }
       if(res[0]=='#goodies'){  
-            goodiesList();
+
+        var check='<?php echo $GoodiesManagement ; ?>' ;
+            if(check!=1){
+              adminHome();
+              return false ;
+            }else{
+                goodiesList();
+            }
+            
         }		
         
-        if(res[0]=='#rankType'){
-            rankTypeList();
-        }    
+     
         
-        if(res[0]=='#interest'){
-            interestList();
-        }    
+     
 
-
-        if(res[0]=='#sponser'){
-            sponserList();
-        }            
+        
         if(res[0]=='#termCondition'){
-            termCondition();
+
+           var check='<?php echo $TermConditions ; ?>' ;
+            if(check!=1){
+              adminHome();
+              return false ;
+            }else{
+                termCondition();
+            }
+           
         }
+
 		if(res[0]=='#privacyPolicy'){
-            privacyPolicy();
+
+          var check='<?php echo $PrivacyPolicy ; ?>' ;
+            if(check!=1){
+              adminHome();
+              return false ;
+            }else{
+                 privacyPolicy();
+            }
+           
         }
-		if(res[0]=='#country'){
-            country();
-        }
-		if(res[0]=='#city'){
-            city();
-        }  
+
+		// if(res[0]=='#country'){
+  //           country();
+  //       }
+		// if(res[0]=='#city'){
+  //           city();
+  //       }  
 
        
-        if(res[0]=='#advertisement_detail'){
-            advertisementDetail(res[1]);
-        }
+
         
 
-        if(res[0]=='#contactSupport'){
-            contactSupport();
-        }
+       
 
-        if(res[0]=='#notification_detail'){
-            notificationDetail(res[1]);
-        }
 
-        if(res[0]=='#index'){
-            dashboard();
-        }
+       
      
 });
-<?php $session_data=session()->get('admin_session');?>
-<?php $user_per_info=user_permission($session_data['userId']);     
 
-  $dashboard=checkRole($user_per_info,1);
-  $AdminUser=checkRole($user_per_info,2);
-  $CustomerManagement=checkRole($user_per_info,3);
-  $EventManagement=checkRole($user_per_info,4);
-  $CouponManagement=checkRole($user_per_info,5);
-  $GoodiesManagement=checkRole($user_per_info,6);
-  $BookingManagement=checkRole($user_per_info,7);
-  $EventBookingManagement=checkRole($user_per_info,11);
-  $GoodiesBookingManagement=checkRole($user_per_info,12);
-  $TermConditions=checkRole($user_per_info,13); 
-  $PrivacyPolicy=checkRole($user_per_info,14);  
-  $CMS=checkRole($user_per_info,8);
-  $Master=checkRole($user_per_info,9);
-  
-   //echo $EventBookingManagement;die;
 
-?>
+
 </script>
     <div class="header_logo">
     <a class="navbar-brand" href="#">
@@ -207,17 +341,21 @@ $('#letsgo_sidebar').find('li a').click(function(){
         Event Management
     </span></a></li>
 	<?php } ?>
-	<?php if($CouponManagement== 1){ ?>
-	<!--<li><a href="{{URL::to('/')}}/administrator/dashboard#coupon" onclick="couponList()"><i class="ri-user-settings-line"></i>
+	<?php /*if($CouponManagement== 1){ ?>
+	<li><a href="{{URL::to('/')}}/administrator/dashboard#coupon" onclick="couponList()"><i class="ri-user-settings-line"></i>
            <span class="tooltip_nav">
         Coupon Management
-    </span></a></li> -->
-   <?php } ?>	
+    </span></a></li> 
+   <?php } */ ?>	
+
+   <?php if($GoodiesManagement==1){ ?>
   <li><a href="{{URL::to('/')}}/administrator/dashboard#goodies" onclick="goodiesList()"><img src="{{URL::to('/public/admin')}}/icon/goodies_management.png">
            <span class="tooltip_nav">
         Goodies Management
   </span></a></li> 
-  <?php if($BookingManagement== 1){ ?>
+ <?php } ?>
+
+  <?php if($BookingManagement== 1 || $GoodiesBookingManagement==1 || $EventBookingManagement== 1){ ?>
 		<li>
             <div class="booking_nav">
                 <a class="" id="booking_n"><span><img src="{{URL::to('/public/admin')}}/icon/booking_management.png">
@@ -240,7 +378,7 @@ $('#letsgo_sidebar').find('li a').click(function(){
             </div>
         </li>
 		<?php } ?>
-       <?php if($CMS== 1){ ?>		
+       <?php if($CMS==1 || $TermConditions==1 || $PrivacyPolicy==1){ ?>		
         <li>
             <div class="cms_nav">
                 <a class="" id="drop_nav"><span><img src="{{URL::to('/public/admin')}}/icon/cms.png">
@@ -270,29 +408,35 @@ $('#letsgo_sidebar').find('li a').click(function(){
             </div>
         </li>
      <?php } ?>	
-  <?php if($Master == 1){ ?>	 
+  <?php if($Master==1 || $eventType==1 || $eventFeeType==1){ ?>	 
         <li>
             <div class="master_nav">
                 <a class="" id="master_n"><span><img src="{{URL::to('/public/admin')}}/icon/master.png">
                      <span class="tooltip_nav">Master</span>
                 </span> <span class="dropdown_tog"><i class="ri-arrow-drop-down-line"></i></span></a>
                 <ul class="dropdown-menu" id="drop_content_m"> 
+  
+                <?php if($eventType==1){ ?>
                 <li><a href="{{URL::to('/')}}/administrator/dashboard#event_type" onclick="eventtypeList()">
                 <i class="ri-arrow-right-s-line"></i>
                 <span class="tooltip_nav">Event Type</span>
                 </a></li>
+              <?php } ?>
+
+              <?php if($eventFeeType==1){ ?>
                  <li><a href="{{URL::to('/')}}/administrator/dashboard#event_fee_type" onclick="eventfeetypeList()">
                 <i class="ri-arrow-right-s-line"></i>
                 <span class="tooltip_nav">Event Fee Type</span>
                 </a></li>
-				<li><a href="{{URL::to('/')}}/administrator/dashboard#country" onclick="country()">
+                <?php } ?>
+		<!-- 		<li><a href="{{URL::to('/')}}/administrator/dashboard#country" onclick="country()">
                 <i class="ri-arrow-right-s-line"></i>
                 <span class="tooltip_nav">Country</span>
                 </a></li>  
 				<li><a href="{{URL::to('/')}}/administrator/dashboard#city" onclick="city()">
                 <i class="ri-arrow-right-s-line"></i>
                 <span class="tooltip_nav">City</span>  
-                </a></li>
+                </a></li> -->
 				
                 </ul>
             </div>

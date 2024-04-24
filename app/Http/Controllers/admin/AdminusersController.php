@@ -100,8 +100,12 @@ class AdminusersController extends Controller
        return checkResponse([],'Email id already Registered');
     }else{    
          $user_info=AdminUser::create($insertData);
+
+           $isSendMail = config('constants.isSendMail');
+       if($isSendMail==1){
          $da=sendRegistrationToEmail($data1);
-     
+        }
+        
     $master_data=DB::table('master_role_permission')->where('roleTypeId',$user_role)->get();
      if(!empty($master_data) && sizeof($master_data) > 0 ){
       foreach($master_data as $master_datas){
@@ -333,6 +337,55 @@ $master_info1=DB::table('roles_permission')->where('userId',$id)->where('roleTyp
         }
 
     } 
+
+public function edit_admin_user(Request $request){
+
+  $adminUserId=isset($request->id)?$request->id:0 ;
+
+  $adminData=DB::table("admin_users")->where('id',$adminUserId)->first();
+
+    $carQry="select id,type,name from categories where type=1" ;   
+        $category_data = DB::select($carQry); 
+       
+    $res2=array();
+         $role_type_info=DB::table('role_type')->where('status',1)->where('id','!=',3)->orderBy('id', 'DESC')->get();
+     if(!empty($role_type_info)){
+       foreach($role_type_info as $role_type_infos){
+         $type['title']=$role_type_infos->title;
+         $type['id']=$role_type_infos->id;
+         $res2[]=!empty($type)?$type:"";
+       }         
+     }
+    
+    return view('admin/adminUsersManagement/edit_admin_user')->with(['adminData'=>$adminData,'role_type'=>$res2,'category_data'=>$category_data]);
+    
+  //print_r($adminData);
+}
+
+public function update_admin_user(Request $request){
+   $updateId=isset($request->updateUserId)?$request->updateUserId:0 ;
+   $firstName=isset($request->edit_name)?$request->edit_name:0 ;
+   $lastName=isset($request->edit_last_name)?$request->edit_last_name:0 ;
+   $role=isset($request->edit_user_role)?$request->edit_user_role:0 ;
+   $category=isset($request->edit_category)?$request->edit_category:0 ;
+   $status=isset($request->edit_status)?$request->edit_status:0 ;
+   $mobileNumber=isset($request->edit_mobile_number)?$request->edit_mobile_number:0 ;
+
+
+   $updataData=array(
+        'first_name'=>$firstName ,
+        'last_name'=>$lastName ,
+        'user_type'=>$role,
+        'category'=>$category,         
+        'status'=>$status,  
+        'phone'=>$mobileNumber
+   );
+
+    DB::table('admin_users')->where('id',$updateId)->update($updataData);
+
+    echo json_encode(array('status'=>1));
+
+}
 
      
 }

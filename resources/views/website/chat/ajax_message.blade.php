@@ -7,7 +7,7 @@
                         <li>
                             <?php if($message->from != Auth::id()){ ?>
                                  <span><img src="{{$message->usrImg}}" alt=""></span>
-                                 <!-- http://192.168.1.31:8080/golden/storage/app/public/user_image/user_holder.svg -->
+                                 <!--- http://192.168.1.31:8080/golden/storage/app/public/user_image/user_holder.svg -->
 
                              <?php  } ?>
 
@@ -16,13 +16,28 @@
                                 <div class="cont_bx">
                                     <?php if (!empty($message->message)) { ?>
                                         <p>{{ $message->message }}</p>
-                                    <?php } ?>
+                                    <?php } 
+
+                                      if(!empty($message->image) && count($message->image)==1){
+                                    $class="singaleImg" ;
+                                }else if(!empty($message->image) && count($message->image)==2){
+                                    $class="twoImg" ;
+                                }else if(!empty($message->image) && count($message->image)==3){
+                                     $class="threeImg" ;
+                                }else{
+                                    $class="moreImg" ;
+                                }
+
+
+                                    ?>
                                     <?php if (!empty($message->image)) {  ?>
-                                        <div class="list_media">
+                                        <div class="list_media <?php echo $class ; ?>">
                                         <?php foreach ($message->image as $image_data) {   ?>
                                             <?php if ($image_data['file_type'] == "image") { ?>
                                                 <div class="media_img">
+                                                <a href="<?php echo $image_data['image']  ?>" data-fancybox="gallery" data-caption="">    
                                                 <img src="<?php echo $image_data['image']  ?>" class="img_thmb" alt="">
+                                            </a>
                                                 </div>
                                             <?php } ?>
                                             <?php if ($image_data['file_type'] == "application") { ?>
@@ -32,9 +47,12 @@
                                             <?php } ?>
                                             <?php if ($image_data['file_type'] == "video" && isset($image_data['image'])) { ?>
                                                 <div class="media_video">
+
+                                                <a data-fancybox="group-1" href="<?php echo $image_data['image'];  ?>">   
                                                 <video width="320" height="240" controls>
                                                     <source src="<?php echo $image_data['image'];  ?>">
                                                 </video>
+                                            </a>
                                                 </div>
                                             <?php } ?>
                                         <?php }  ?>

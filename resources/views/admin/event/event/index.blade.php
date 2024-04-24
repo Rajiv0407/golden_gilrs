@@ -2,6 +2,7 @@
   $user_per_info=user_permission($session_data['userId']);   
   $AddEventManagement=checkAddRole($user_per_info,4);
   $EditEventManagment=checkEditRole($user_per_info,4);  
+  $StatusEventManagment=checkStatusRole($user_per_info,4);
    //echo "<pre>";print_r($session_data);die; 
 
   ?>  
@@ -206,7 +207,7 @@
 				<div class="form modal-form">
                     <div class="form-group">
                         <label for="event_image">Event Image</label>
-                         <input type="File" name="event_image[]" id="event_image"  class="form-control" placeholder="Event Image">
+                         <input type="File" name="event_image[]" id="event_image"  class="form-control" placeholder="Event Image" accept="image/*">
                          <span id="err_event_type_image" class="err" style="color:red"></span>
                     </div>
                 </div>
@@ -269,6 +270,8 @@ $('#event_country').change(function(e) {
 
      $(document).ready(function($k){
           var edit_event_per='<?php echo $EditEventManagment; ?>'; 
+          var StatusEventManagment='<?php echo $StatusEventManagment ; ?>' ;
+          
         datatablePagination($k); 
          $('#dataTable').DataTable({
               processing: true,
@@ -330,13 +333,14 @@ $('#event_country').change(function(e) {
 
                                 // data-bs-toggle="modal" data-bs-target="#edit_body"
                                 var action = edit;
-								
+								      if(StatusEventManagment==1){
+
                             if(full['status']==1){
                                  action +='<input type="checkbox" onclick="changeStatus('+full['id']+')" checked>' ;
                              }else{
                                 action +='<input type="checkbox" onclick="changeStatus('+full['id']+')" >' ;
                              }
-
+                        }
                               action+='<span class="slider"></span> </label> </div> </div> '  ;
 
                                return action ;
@@ -553,13 +557,13 @@ $('#event_country').change(function(e) {
 		}else if(event_seat==''){
       $('#err_edit_event_seat').html('Please enter quantity in number');
     }
-    else if(event_date==''){
-			$('#err_edit_event_date').html('Please select event date');
-		}else if(edit_start_date==''){     
+    else if(edit_start_date==''){     
 			$('#err_edit_event_start_date').html('Please select event start date');
 		}else if(edit_end_date==''){
 			$('#err_edit_event_end_date').html('Please select event end date');
-		}else if(event_descrption==''){
+		}else if(event_date==''){
+      $('#err_edit_event_date').html('Please select event date');
+    }else if(event_descrption==''){
 			$('#err_edit_event_descrption').html('Please enter event descrption');
 		}else{
         $('.err').html('');

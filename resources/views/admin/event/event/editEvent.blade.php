@@ -77,13 +77,7 @@
              <span id="err_edit_event_seat" class="err" style="color:red"></span>
         </div>
 		</div>
-		<div class="form modal-form">  
-		<div class="form-group">
-            <label for="edit_event_date">Event Date</label>
-             <input type="datetime-local" name="edit_event_date" id="edit_event_date"  value="<?php echo isset($eventInfo->event_date)?$eventInfo->event_date:'' ; ?>" class="form-control" placeholder="Event Date">
-             <span id="err_edit_event_date" class="err" style="color:red"></span>
-        </div>
-		</div>
+		
 		<div class="form modal-form">  
 		<div class="form-group">
             <label for="edit_start_date">Start Date</label>
@@ -98,6 +92,13 @@
              <span id="err_edit_event_end_date" class="err" style="color:red"></span>
         </div>
       </div>	
+      <div class="form modal-form">  
+        <div class="form-group">
+            <label for="edit_event_date">Event Date</label>
+             <input type="datetime-local" name="edit_event_date" id="edit_event_date"  value="<?php echo isset($eventInfo->event_date)?$eventInfo->event_date:'' ; ?>" class="form-control" placeholder="Event Date">
+             <span id="err_edit_event_date" class="err" style="color:red"></span>
+        </div>
+        </div>
        <div class="form modal-form">  	  
 		<div class="form-group">
             <label for="edit_event_descrption">Event Descrption</label>
@@ -108,7 +109,7 @@
 		<div class="form modal-form">  
 		<div class="form-group">
             <label for="edit_event_image">Event Image</label>
-             <input type="file" name="edit_event_image[]"  id="edit_event_image"  value="<?= isset($eventInfo->image)?$eventInfo->image:'' ; ?>" class="form-control" placeholder="Event Image" multiple>
+             <input type="file" name="edit_event_image[]"  id="edit_event_image"  value="<?= isset($eventInfo->image)?$eventInfo->image:'' ; ?>" class="form-control" placeholder="Event Image" accept="image/*" >
              <span id="err_edit_event_image" class="err" style="color:red"></span>
         </div>
 		</div>

@@ -34,7 +34,7 @@
 						</div>
 					</div>
 
-					<?php if ($post_infos['post_user_id'] == $post_infos['session_user_id']) { ?>
+					<?php if ($post_infos['post_user_id'] == $data['loginUserId']) { ?>
 					<div class="nav-item dropdown">
 						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
 							data-bs-toggle="dropdown" aria-expanded="false"><i class="ri-more-2-line"></i></a>
@@ -63,7 +63,7 @@
 					<?php if ($image->file_type == 'image') { ?>
 					<div class="post_box" id="banner_image_<?php echo $post_infos['id']; ?>"
 						style="background:url('<?php echo $image->image; ?>');">
-						<img class="media_img" src="<?php echo $image->image; ?>" alt="">
+						<img class="media_img" src="<?php echo $image->thumbnail; ?>" alt="">
 					</div>
 					<?php } else { ?>
 					<div class="single_video" id="banner_image_<?php echo $post_infos['id']; ?>">
@@ -80,7 +80,7 @@
 										?>
 					<?php if ($image->file_type == 'image') { ?>
 					<div class="post_box" id="banner_image_<?php echo $post_infos['id']; ?>">
-						<img class="media_img" src="<?php echo $image->image; ?>" alt="">
+						<img class="media_img" src="<?php echo $image->thumbnail; ?>" alt="">
 					</div>
 					<?php } else { ?>
 					<div class="post_video" id="banner_image_<?php echo $post_infos['id']; ?>">
@@ -98,7 +98,7 @@
 					<?php if ($image->file_type == 'image') { ?>
 					<div class="post_box" id="banner_image_<?php echo $post_infos['id']; ?>"
 						onclick="model_data(<?php echo $post_infos['id']; ?>,<?php echo $image->file_type ; ?>);">
-						<img class="media_img" src="<?php echo $image->image; ?>" alt="">
+						<img class="media_img" src="<?php echo $image->thumbnail; ?>" alt="">
 					</div>
 					<?php } else { ?>
 					<div class="post_video" id="banner_image_<?php echo $post_infos['id']; ?>">
@@ -117,7 +117,7 @@
 					<?php if ($i < 3) { ?>
 					<?php if ($image->file_type == 'image') { ?>
 					<div class="post_box" id="banner_image_<?php echo $post_infos['id']; ?>">
-						<img class="media_img" src="<?php echo $image->image; ?>" alt="">
+						<img class="media_img" src="<?php echo $image->thumbnail; ?>" alt="">
 					</div>
 					<?php } else { ?>
 					<div class="post_video" id="banner_image_<?php echo $post_infos['id']; ?>">

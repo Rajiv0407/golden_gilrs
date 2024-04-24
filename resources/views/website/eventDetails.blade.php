@@ -4,7 +4,7 @@
 <div class="sell_box " id="event_detail">
   <div class="head">
     <ul class="step_bar">
-      <li><a href="{{URL::to('/')}}/life_style">Event</a></li>
+      <li><a <?php if($data['isLogin']==1){ ?>href="{{URL::to('/')}}/life_style" <?php }else{ ?>href="javascript:void(0);" <?php } ?> >Event</a></li>
       <li>Event Details</li>
     </ul>
   </div>
@@ -81,7 +81,7 @@
               <button type="button" class="add" id="add">+</button>
             </div>
 
-            <button type="button" class="btn" onclick="send_booking_confirm();">Join</button>
+            <button type="button" class="btn" onclick="send_booking_confirm(<?php echo $data['isLogin'] ; ?>);">Join</button>
           </div>
         </div>
       </form>
@@ -110,15 +110,15 @@
             <h3>You have Succeeded</h3>
           </div>
 
-          <p class="jc_dec">Now sit back and relax. Now it was our work to check out your details. We will send you Email Confirmation once we are done.</p>
+          <p class="jc_dec">Now sit back and relax.  We will review your details and send you a confirmation email shortly.</p>
 
           <div class="jc_name">
-            <p>In mean time, Know about</p>
-            <h4>Golden Girls</h4>
+            <p>In THE meantime, Learn more. </p>
+            <!-- <h4>Golden Girls</h4> -->
           </div>
 
           <div class="button-group">
-            <a href="{{URL::to('/')}}/life_style">
+            <a href="{{URL::to('/')}}/aboutus" target="_blank">
               <button type="button" class="btn">About Golden Girls</button></a>
           </div>
 
@@ -128,7 +128,143 @@
   </div>
 </div>
 
+<!-- Login Modal -->
+<div class="modal fade login_post_modal" id="login_post" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="login_postLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+      <!-- <i class="fa fa-times" aria-hidden="true"></i> -->
+      <!-- <i class="ri-close-line"></i> -->
+  </button>
+      </div>
+      <div class="modal-body">
+       
 
+    <div class="login_p_wrap">
+    <h4>See More on Golden Girls</h4>
+    <div class="login_pst_frm" id="loginForm">
+      <form action="javascript:void(0);" id="login_form" >
+      <div class=" form-group text-lg-start">
+            <input type="text" class="form-control" id="user_email" name="login_email" placeholder="Email" >
+            <span class="err" id="err_user_email"> </span>
+      </div>
+      <div class=" form-group text-lg-start">
+            <input type="password" class="form-control" name="login_password" id="user_password" placeholder="Password" >
+            <span class="err" id="err_user_password"> </span>
+      </div>
+      <span class="err" id="err_login_form"></span>
+      <div class="login_p_btn">
+        <button class="btn" onclick="loginUser()">Log in</button>
+        <a href="javascript:void(0);" class="forgotAccount">Forgotten password</a>
+      </div>
+      </form>
+
+      <div class="or_create">
+            <span>or</span>
+      <button class="btn createAccount" >Create New Account</button>
+      </div>
+
+    </div>
+    <div class="login_pst_frm" id="signupForm" style="display: none;">
+      <form action="javascript:void(0);" id="usrRegisterForm">
+      <div class=" form-group text-lg-start">
+            <input type="text" class="form-control" id="first_name" name="first_name" placeholder="First Name" >
+            <span class="err" id="err_first_name"></span>
+      </div>
+      <div class=" form-group text-lg-start">
+            <input type="text" class="form-control" id="last_name" name="last_name" placeholder="Last Name" >
+            <span class="err" id="err_last_name"></span>
+      </div>
+      <div class=" form-group text-lg-start">
+            <input type="text" class="form-control" id="signup_emal" name="email" placeholder="Email" >
+            <span class="err" id="err_signup_emal"></span>
+      </div>
+      <div class=" form-group text-lg-start">
+            <input type="text" class="form-control tel_input" id="usr_mobileNo" name="mobile_number" placeholder="Mobile Number" >
+            <span class="err" id="err_usr_mobileNo"></span>
+      </div>
+      <div class=" form-group text-lg-start">
+            <input type="date" name="dob" class="form-control" id="usr_dob"   placeholder="dd/mm/yy">
+            <span class="err" id="err_usr_dob"></span>
+      </div>
+      <div class=" form-group text-lg-start">
+            <input type="text" class="form-control" id="usr_nationality" name="nationality" placeholder="Nationality" >
+            <span class="err" id="err_usr_nationality"></span>
+      </div>
+      <div class=" form-group text-lg-start">
+            <input type="password" class="form-control" id="signup_password" name="password" placeholder="Password" >
+            <span class="err" id="err_signup_password"></span>
+      </div>
+      <span class="err" id="err_signup_form"></span>
+      <div class="login_p_btn">
+        <button class="btn" onclick="usrSignup()">Register Now</button>       
+      </div>
+      </form>
+
+      <div class="or_create">
+            <span>or</span>
+      <button class="btn loginAccount" > Already Registered? Login </button>
+      </div>
+
+    </div>
+
+    <div class="login_pst_frm" id="forgotPassword" style="display: none;">
+      
+      <p>Lost Your Password? Please Enter your email address. You will receive a New Password Via Email.</p>
+       <span id="forgot_user_name_password" style="color:green"></span>
+       <span id="err_forgot_user_name_password" style="color:red"></span>
+      <form action="javascript:void(0);" id="forgotPasswordForm">
+      <div class=" form-group">
+            <input type="text" class="form-control" id="forgot_email" name="forgot_email" placeholder="Email Addfress" >
+            <span class="err" id="err_forgot_email"></span>
+      </div>
+      
+      <div class="login_p_btn">
+        <button class="btn" onclick="forgot_password()">Reset Password</button>       
+      </div>
+      </form>
+
+      <div class="or_create">
+            <span>or</span>
+      <button class="btn loginAccount" > Already Registered? Login </button>
+      </div>
+
+    </div>
+    </div>
+
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+
+<div class="sucmssg_box" id="login_succ" style="display:none;">
+    <div class="btm_left_box_mdl">
+      <div class="media"><i class="m_icon"></i></div>
+      <div class="data">
+        <h3>Success</h3>
+        <p>Login Successfully ! </p>
+        <div class="dismiss crs">
+          <button mat-icon-button="" class="crs_btn"><i aria-hidden="true" class="fa fa-times"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="sucmssg_box" id="signup_succ" style="display:none;">
+    <div class="btm_left_box_mdl">
+      <div class="media"><i class="m_icon"></i></div>
+      <div class="data">
+        <h3>Success</h3>
+        <p>Singup Successfully ! </p>
+        <div class="dismiss crs">
+          <button mat-icon-button="" class="crs_btn"><i aria-hidden="true" class="fa fa-times"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
@@ -142,5 +278,46 @@
     var th = $(this).closest('.wrap').find('.count');
     if (th.val() > 1) th.val(+th.val() - 1);
   });
+
+
+   $('.createAccount').click(function(){      
+      $('#signupForm').show();
+      $('#loginForm').hide();
+      $('#forgotPassword').hide();
+  });
+
+  $('.loginAccount').click(function(){
+      $('#loginForm').show();
+      $('#signupForm').hide();      
+      $('#forgotPassword').hide();
+  });
+
+  $('.forgotAccount').click(function(){
+        $('#forgotPassword').show();
+      $('#loginForm').hide();
+      $('#signupForm').hide();  
+  });
+
+
+
+    var telInput = $(".tel_input")
+    // initialise plugin
+    telInput.intlTelInput({
+      allowExtensions: true,
+      formatOnDisplay: true,
+      autoFormat: true,
+      autoHideDialCode: true,
+      autoPlaceholder: true,
+      defaultCountry: "auto",
+      ipinfoToken: "yolo",
+      nationalMode: false,
+      numberType: "MOBILE",      
+      preventInvalidNumbers: true,
+      separateDialCode: false,
+      initialCountry: "gb",
+    });
+
+
+ 
 </script>
 @stop

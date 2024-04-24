@@ -1,3 +1,12 @@
+<?php $session_data=session()->get('admin_session');
+ $user_per_info=user_permission($session_data['userId']);          
+  
+ $EditGoodiesManagment=checkEditRole($user_per_info,2);   
+
+ 
+ ?>
+
+
 <div class="breadcrumbWrapper d-flex align-items-center justify-content-between ">
                     <nav aria-label="breadcrumb">
                         <h3 class="fs-5 m-0 fw-500">User Details</h3>
@@ -16,31 +25,71 @@
                   
 </div>
 <div class="ibox-content m-b-sm border-bottom" style="padding-bottom: 20px;">
-  <div class="row">
+  <div class="filterWrapper">
+  <div class="bcc__wrapper custm_dtls">
+    <div class="custmer_dtls">
+      <p>
+        <span>Name : </span>
+        <span><?php echo $userInfo->first_name.' '.$userInfo->last_name ?></span>
+      </p> 
+       <p>
+        <span>Email : </span>
+        <span><?php echo $userInfo->email; ?></span>
+      </p>
+      <p>
+        <span>Mobile Number : </span>
+        <span><?php echo $userInfo->phone; ?></span>
+      </p>
+
+      <?php if($userInfo->user_type ==3){ ?>
+          <p>
+        <span>User Type : </span>
+        <span>Admin</span>
+      </p>
+      <?php }else if($userInfo->user_type ==1){ ?> 
+          <p>
+        <span>User Type : </span>
+        <span>Brand</span>
+      </p>
+      <?php }else if($userInfo->user_type==2){ ?> 
+          <p>
+        <span>User Type : </span>
+        <span>Hospitality</span>
+      </p>
+      <?php } ?> 
+
+      
+    </div>              
+</div>
+                       
+                 
+                          
+                          
+  <!--                       
     <div class="col-md-2 pr0 pl0">
       <div class="form-group">
-        <div class="form-control"><?php echo $userInfo->first_name.' '.$userInfo->last_name ?></div>
+        <div class="form-control"></div>
         <span ng-bind="TitleName"></span>
       </div>
     </div>
     <div class="col-md-2 pr0">
       <div class="form-group">
-        <div class="form-control" style="overflow: hidden;"><?php echo $userInfo->email; ?></div>
+        <div class="form-control" style="overflow: hidden;"><?php //echo $userInfo->email; ?></div>
       </div>
     </div>
     <div class="col-md-2 pr0">
       <div class="form-group">
-        <div class="form-control"><?php echo $userInfo->phone; ?></div>
+        <div class="form-control"><?php //echo $userInfo->phone; ?></div>
       </div>
     </div>
     <div class="col-md-2 pr0">
       <div class="form-group">
         <div class="form-control">Active</div>
       </div>
-    </div>
+    </div> -->
 	
 	
-	 <?php if($userInfo->user_type == 3){ ?>
+	 <?php /* if($userInfo->user_type == 3){ ?>
 	   
 	   <div class="col-md-2 pr0">
       <div class="form-group">
@@ -71,7 +120,7 @@
 		</div>
 	    	
 		
-	   <?php } ?>
+	   <?php } */  ?>
 			
 	</div>
 </div>
@@ -99,7 +148,7 @@
 
   <div class="col-md-10">
     <div class="d-flex btn_grp">
-    
+       <?php if($EditGoodiesManagment==1){ ?> 
         <button type="button" onclick="saveUserRolePermissions()" class="search-btn" >
          Save Privileges
         </button>
@@ -109,6 +158,7 @@
         <button  type="button" onclick="deleteUserAllRolePermissions()"  class="search-btn clear-btn ml-5px">
           Revoke All
         </button>
+        <?php } ?>
       </div>
    </div>
    

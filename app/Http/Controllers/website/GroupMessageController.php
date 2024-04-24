@@ -49,9 +49,14 @@ class GroupMessageController extends Controller
     {   
  
         $my_id = Auth::id();
-        
-        $imgPath = url('/').'/storage/app/public/group_image/thumbnail/' ;
-        $group = Group::select('id','group_name','code','admin_id',DB::raw('case when thumbnail="" then "" else concat("'.$imgPath.'",thumbnail)  end as image '),'created_at')->where('id',$id)->first();
+
+        $group_icon = config('constants.group_icon');
+        $userImage = config('constants.user_profile_img_s3');
+        $s3BaseURL = config('constants.s3_baseURL');
+
+        //$imgPath = url('/').'/storage/app/public/group_image/thumbnail/' ;
+        $imgPath = $s3BaseURL.$group_icon ;
+        $group = Group::select('id','group_name','code','admin_id',DB::raw('case when thumbnail="" then "" else concat("'.$imgPath.'",id,"/",thumbnail)  end as image '),'created_at')->where('id',$id)->first();
         // get all messages that User sent & got
         // $messages = Message::where(function ($query) use ($id, $my_id) {
         //     $query->where('group_id', $id)->where('user_id', $my_id);
@@ -64,7 +69,7 @@ class GroupMessageController extends Controller
         $offset = ($page - 1) * $limit ;
 
 
-        $messages = DB::table('group_messages')->select('group_messages.id','group_messages.user_id','group_messages.group_id','group_messages.from','group_messages.name','group_messages.is_read','group_messages.message','group_messages.created_at','group_messages.updated_at',DB::raw('users.image as groupImg'),DB::raw("concat(users.first_name,' ',last_name) as name"),'group_messages.message_type')
+        $messages = DB::table('group_messages')->select('group_messages.id',DB::raw('users.id as userId'),'group_messages.user_id','group_messages.group_id','group_messages.from','group_messages.name','group_messages.is_read','group_messages.message','group_messages.created_at','group_messages.updated_at',DB::raw('users.image as groupImg'),DB::raw("concat(users.first_name,' ',last_name) as name"),'group_messages.message_type')
         ->join('users','users.id','=','group_messages.from')
         ->where(['group_id' => $id])->where(['user_id' => $my_id])->orderby('group_messages.id','DESC')->skip($offset)->take($limit)->get()->reverse();
         
@@ -72,16 +77,23 @@ class GroupMessageController extends Controller
             DB::table('group_messages')->where(['user_id' => $my_id])->update(['is_read' => 1]); // if User start to see messages is_read in Table update to 0
         }
 
-        $imgPath=url('/')."/storage/app/public/group_image/" ;
-        $videoPath=url('/')."/storage/app/public/group_video/" ;
-        $applicationPath=url('/')."/storage/app/public/group_document/" ;
+        // $imgPath=url('/')."/storage/app/public/group_image/" ;
+        // $videoPath=url('/')."/storage/app/public/group_video/" ;
+        // $applicationPath=url('/')."/storage/app/public/group_document/" ;
+
+        $group_image = config('constants.group_image');
+        
+
+        $imgPath=$s3BaseURL.$group_image ;
+        // $videoPath=$s3BaseURL.$group_image ;
+        // $applicationPath=$s3BaseURL.$group_image ;
 
         $response=array();
         if(!empty($messages)){
         foreach ($messages as $key => $value) {
 			
-         $chat_image=DB::table('group_images')->select('chat_id','file_type',DB::raw("case when (file_type='image' && file is not null) then concat('".$imgPath."',file) when (file_type='video' && file is not null) then concat('".$videoPath."',file) when (file_type='application' && file is not null) then concat('".$applicationPath."',file) else '' end as image ") )
-           ->where('chat_id',$value->id)->get();
+         $chat_image=DB::table('group_images')->select('chat_id','file_type',DB::raw("case when (file_type='image' && file is not null) then concat('".$imgPath."',chat_id,'/',file) when (file_type='video' && file is not null) then concat('".$imgPath."',chat_id,'/',file) when (file_type='application' && file is not null) then concat('".$imgPath."',chat_id,'/',file) else '' end as image ") )
+           ->where('chat_id',$value->id)->get()->toArray();
             $res1=array();
         
         if(!empty($chat_image)){
@@ -100,7 +112,8 @@ class GroupMessageController extends Controller
         }  
         
          if(isset($value->groupImg) && $value->groupImg!=''){
-              $value->groupImg = URL('/').'/storage/app/public/user_image/'.$value->groupImg ;
+             // $value->groupImg = URL('/').'/storage/app/public/user_image/'.$value->groupImg ;
+              $value->groupImg = $s3BaseURL.$userImage.$value->userId.'/'.$value->groupImg ;
          }else{
              $value->groupImg = URL('/').'/storage/app/public/user_image/user_holder.svg' ;
          }
@@ -110,10 +123,11 @@ class GroupMessageController extends Controller
         }
     }
        
-        $usrImg=url('/')."/storage/app/public/user_image/" ;
-        
+        //$usrImg=url('/')."/storage/app/public/user_image/" ;
+        $usrImg=$s3BaseURL.$userImage ;
+      
   
-         $users_list = DB::select("select users.id,users.isOnline,case when users.image is null then '' else  concat('".$usrImg."',users.image) end as image, concat(users.first_name,' ',users.last_name) as name,LEFT (users.first_name, 1) as first_letter,users.email
+         $users_list = DB::select("select users.id,users.isOnline,case when users.image is null then '' else  concat('".$usrImg."',users.id,'/',users.image) end as image, concat(users.first_name,' ',users.last_name) as name,LEFT (users.first_name, 1) as first_letter,users.email
         from users where status=1 and is_delete limit 5 ");
 
          $groupUser = DB::select("select user_id from group_participants where group_id=".$id);
@@ -151,8 +165,14 @@ class GroupMessageController extends Controller
 
           $usrI = User::select('image')->where('id',$from)->get()->first();
 
+        $user_profile_img_s3 = config('constants.user_profile_img_s3');
+        $s3BaseURL = config('constants.s3_baseURL');
+        $group_image = config('constants.group_image');
+        $gImg=$s3BaseURL.$group_image ;
+
         if(isset($usrI->image) && $usrI->image!=''){
-             $fromImg = URL('/').'/storage/app/public/user_image/'.$usrI->image ;
+             //$fromImg = URL('/').'/storage/app/public/user_image/'.$usrI->image ;
+             $fromImg = $s3BaseURL.$user_profile_img_s3.$from.'/'.$usrI->image ;
          }else{
              $fromImg = URL('/').'/storage/app/public/user_image/user_holder.svg' ;
          }
@@ -169,10 +189,11 @@ class GroupMessageController extends Controller
                'message' => $request->message,
                'from' => $from,
                'name' => $name, 
-               'is_read' => 0,
+               'is_read' =>(Auth::id()==$value->id)?1:0,
                'message_type'=>isset($request->message_type)?$request->message_type:1,
                ));
 			   //echo "<pre>";print_r($message['id']);die;
+            
 			   if($request->hasFile('chatimg')) {
 				$files = $request->file('chatimg');
 				foreach ($files as $file) {	  
@@ -184,8 +205,9 @@ class GroupMessageController extends Controller
 					$image_name = md5(rand(1000, 10000));
 					$ext = strtolower($file->getClientOriginalExtension());
                     
-					$image_full_name = $image_name . '.' . $ext;
-					$file->storeAs($imgPath,$image_full_name);
+					$image_full_name = $image_name.time().'.'.$ext;
+					//$file->storeAs($imgPath,$image_full_name);
+                    $file->storeAs($group_image.$message['id'].'/',$image_full_name,'s3Public');
                     $image=$image_full_name;
                    					
 					$input=array(
@@ -194,7 +216,8 @@ class GroupMessageController extends Controller
 							'file_type'=>$fileType,  
 							'created_at'=>date("Y-m-d H:i:s")
 						);
-						$res['file']=url('/').'/storage/app/public/group_image/'.$image;
+						//$res['file']=url('/').'/storage/app/public/group_image/'.$image;
+                        $res['file']=$gImg.$message['id'].'/'.$image;
 						$res['file_type']=$fileType;
 						$res1[]=$res;  
 					DB::table('group_images')->insert($input);  			 
@@ -211,8 +234,9 @@ class GroupMessageController extends Controller
 					$image_name = md5(rand(1000, 10000));
 					$ext = strtolower($file->getClientOriginalExtension());
                     
-					$image_full_name = $image_name . '.' . $ext;
-					$file->storeAs($imgPath,$image_full_name);
+					$image_full_name = $image_name.time().'.'.$ext;
+					//$file->storeAs($imgPath,$image_full_name);
+                    $file->storeAs($group_image.$message['id'].'/',$image_full_name,'s3Public');
                     $image=$image_full_name;
                    					
 					$input=array(
@@ -221,7 +245,8 @@ class GroupMessageController extends Controller
 							'file_type'=>$fileType,  
 							'created_at'=>date("Y-m-d H:i:s")
 						);
-						$res['file']=url('/').'/storage/app/public/group_video/'.$image;
+						//$res['file']=url('/').'/storage/app/public/group_video/'.$image;
+                        $res['file']=$gImg.$message['id'].'/'.$image;
 						$res['file_type']=$fileType;
 						$res1[]=$res;
 					DB::table('group_images')->insert($input);  			 
@@ -238,8 +263,9 @@ class GroupMessageController extends Controller
 					$image_name = md5(rand(1000, 10000));
 					$ext = strtolower($file->getClientOriginalExtension());
                     
-					$image_full_name = $image_name . '.' . $ext;
-					$file->storeAs($imgPath,$image_full_name);
+					$image_full_name = $image_name.time().'.'.$ext;
+					//$file->storeAs($imgPath,$image_full_name);
+                    $file->storeAs($group_image.$message['id'].'/',$image_full_name,'s3Public');
                     $image=$image_full_name;
                    					
 					$input=array(
@@ -248,7 +274,8 @@ class GroupMessageController extends Controller
 							'file_type'=>$fileType,  
 							'created_at'=>date("Y-m-d H:i:s")
 						);
-						$res['file']=url('/').'/storage/app/public/group_document/'.$image;
+						//$res['file']=url('/').'/storage/app/public/group_document/'.$image;
+                        $res['file']=$gImg.$message['id'].'/'.$image;
 						$res['file_type']=$fileType;
 						$res1[]=$res;
 					DB::table('group_images')->insert($input);  			 
@@ -256,21 +283,26 @@ class GroupMessageController extends Controller
 			}
 			
 			
-               // Pusher send New message at real time
+               /// Pusher send New message at real time
                $options = array(
                 'cluster' => 'ap2',
                 'encrypted' => true
                 );
+
+            $PUSHER_APP_ID = config('constants.PUSHER_APP_ID');       
+            $PUSHER_APP_KEY = config('constants.PUSHER_APP_KEY');
+            $PUSHER_APP_SECRET = config('constants.PUSHER_APP_SECRET');
+
             $pusher = new Pusher(
-                    'e9c75b86e285c511da57',
-                    '56c0c0dd6d90996be5b9',
-                    '1716502', 
+                   $PUSHER_APP_KEY,
+                    $PUSHER_APP_SECRET,
+                    $PUSHER_APP_ID, 
                     $options
                 );  
             $msg=!empty($request->message)?$request->message:"";
 			$message1=array('message'=>$msg,'image'=>$res1 ,'fromImg'=>$fromImg);
             $res1=array();          
-            $data1 = ['from' => $to, 'to' => $from,'message'=>$message1,'type'=>1,'message_type'=>isset($request->message_type)?$request->message_type:1];  
+            $data1 = ['from' => $to, 'to' => $from,'message'=>$message1,'type'=>1,'message_type'=>isset($request->message_type)?$request->message_type:1,'sender_name'=>$name];  
             $notify = '' . $value->id .'';
            
            // $pusher->trigger($notify, 'App\\Events\\Notify', $data);
@@ -286,27 +318,38 @@ class GroupMessageController extends Controller
          $id=isset($request->groupId)?$request->groupId:0 ;
 
              $my_id = Auth::id();
+
+
+
         
-        $imgPath = url('/').'/storage/app/public/group_image/thumbnail/' ;
+        //$imgPath = url('/').'/storage/app/public/group_image/thumbnail/' ;
         
         $page = $request->has('page') ? $request->get('page') : 1;
         $limit = $request->has('per_page') ? $request->get('per_page') :20;
         $offset = ($page - 1) * $limit ;
 
-        $messages = DB::table('group_messages')->select('group_messages.id','group_messages.user_id','group_messages.group_id','group_messages.from','group_messages.name','group_messages.is_read','group_messages.message','group_messages.created_at','group_messages.updated_at',DB::raw('users.image as groupImg'),'group_messages.message_type')
+        $messages = DB::table('group_messages')->select('group_messages.id','group_messages.user_id','group_messages.group_id','group_messages.from','group_messages.name','group_messages.is_read','group_messages.message','group_messages.created_at','group_messages.updated_at',DB::raw('users.id as userId'),DB::raw('users.image as groupImg'),'group_messages.message_type')
         ->join('users','users.id','=','group_messages.from')
         ->where(['group_id' => $id])->where(['user_id' => $my_id])->orderBy('group_messages.id','desc')->skip($offset)->take($limit)->get()->reverse();
 
       
         $response=array();
-        $imgPath=url('/')."/storage/app/public/group_image/" ;
-        $videoPath=url('/')."/storage/app/public/group_video/" ;
-        $applicationPath=url('/')."/storage/app/public/group_document/" ;
+        $s3BaseURL = config('constants.s3_baseURL');       
+        $group_image = config('constants.group_image');
+        $user_profile_img_s3 = config('constants.user_profile_img_s3');
+
+        // $imgPath=url('/')."/storage/app/public/group_image/" ;
+        // $videoPath=url('/')."/storage/app/public/group_video/" ;
+        // $applicationPath=url('/')."/storage/app/public/group_document/" ;
+
+        $imgPath=$s3BaseURL.$group_image ;
+       
+
 
         if(!empty($messages)){
         foreach ($messages as $key => $value) {
             
-           $chat_image=DB::table('group_images')->select('chat_id','file_type',DB::raw("case when (file_type='image' && file is not null) then concat('".$imgPath."',file) when (file_type='video' && file is not null) then concat('".$videoPath."',file) when (file_type='application' && file is not null) then concat('".$applicationPath."',file) else '' end as image ") )
+           $chat_image=DB::table('group_images')->select('chat_id','file_type',DB::raw("case when (file_type='image' && file is not null) then concat('".$imgPath."',chat_id,'/',file) when (file_type='video' && file is not null) then concat('".$imgPath."',chat_id,'/',file) when (file_type='application' && file is not null) then concat('".$imgPath."',chat_id,'/',file) else '' end as image ") )
            ->where('chat_id',$value->id)->get();
             $res1=array();
         
@@ -325,7 +368,8 @@ class GroupMessageController extends Controller
         }  
         
          if(isset($value->groupImg) && $value->groupImg!=''){
-              $value->groupImg = URL('/').'/storage/app/public/user_image/'.$value->groupImg ;
+              //$value->groupImg = URL('/').'/storage/app/public/user_image/'.$value->groupImg ;
+            $value->groupImg = $s3BaseURL.$user_profile_img_s3.$value->userId.'/'.$value->groupImg ;
          }else{
              $value->groupImg = URL('/').'/storage/app/public/user_image/user_holder.svg' ;
          }

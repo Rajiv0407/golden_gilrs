@@ -17,10 +17,17 @@ use Cookie;
 class administratorController extends Controller
 {
     public function login(Request $request){
-     // User::where('id',32)->update(['password'=>'123456']); exit ;
+     /// User::where('id',32)->update(['password'=>'123456']); exit ;
       //echo $password =  Hash::make(123456) ; exit ;
        //$password = '12345' ;
        //echo    Hash::make($password) ;exit;
+
+         $data=session()->get('admin_session');
+      if(!empty($data)){  
+
+      return redirect('/administrator/dashboard#index');   
+      }
+
     	$data['title']='Golden Girls' ;      
 
       if($request->hasCookie('userName') != false){
@@ -38,23 +45,52 @@ class administratorController extends Controller
     	return view('admin/login',$data);
     }
 	
-	
+	 
+   public function home(Request $request){
+
+    return view('admin/home');
+   }
 
     public function do_login(Request $request){
 		 
+
+
+
         $credentials = [
             'email' => $request->txtUserName,
             'password' => $request->txtPassword,
             'status' => 1
+            
         ];
+
+           $password_ =  Hash::make($request->txtPassword) ;
        
+      $check = DB::table('admin_users')->where('email',$request->txtUserName)->first();
+
+       $isDelete=isset($check->is_delete)?$check->is_delete:0 ;
+        $status=isset($check->status)?$check->status:0 ;
+       if($isDelete==2){
+         echo 'deleted' ;
+          exit ;
+       }else if($status==2){
+        echo 'inactive';
+        exit ;
+       }
+       
+
+
        if (Auth::guard('admin')->attempt($credentials)){
        	$userData = Auth::guard('admin')->user(); 		
-       // echo "<pre>";print_r($userData);die; 		
+       // echo "<pre>";print_r($userData);die; /		
        	$userId = $userData->id ;
        	$userType = $userData->user_type ;
         $rememberMe = $request->rememberMe ;
-      
+        $is_delete = $userData->is_delete ;
+        // if($is_delete==2){
+        //   echo 'deleted' ;
+        //   exit ;
+        // }
+        
          $session_data = array('userId' => $userId,
                                 'userType' => $userType,
                                 'userName' =>$userData->first_name,

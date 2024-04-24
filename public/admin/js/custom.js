@@ -1,4 +1,5 @@
-    
+
+
     function removeModelOpen(){
           // $('.modal').removeClass('in');
           //       $('.modal').attr("aria-hidden","true");
@@ -13,6 +14,9 @@
         }
     }
     
+
+ 
+
     function getUnreadCount(){
       
         ajaxCsrf();
@@ -785,6 +789,7 @@ function vehicleBookingDetail(bookingId,type=1){
         });
     }
 	
+
 	function roleManagment(){
         ajaxCsrf();
         $.ajax({

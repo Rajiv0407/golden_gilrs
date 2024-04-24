@@ -37,7 +37,7 @@ class BookingController extends Controller
            
         $data['title']=siteTitle();
 		$booking_id = isset($request->id)?$request->id:'' ;
-		$carQry="select b.id,b.user_id as user_id,concat(u.first_name,' ',u.last_name) as name,u.email,e.event_name, DATE_FORMAT(b.created_at,'%d %M %Y') as booking_request_date,case when b.status=1 then 'Pending' when b.status=2 then 'Accepted' else 'Cancel' end as status_,b.status from booking_requests as b left join users as u on b.user_id= u.id left join events as e on e.id=b.type_id where b.booking_type=1 and b.id='$booking_id'" ;     
+		$carQry="select b.id,b.user_id as user_id,concat(u.first_name,' ',u.last_name) as name,u.email,e.event_name, DATE_FORMAT(b.created_at,'%d %M %Y') as booking_request_date,case when b.status=1 then 'Pending' when b.status=2 then 'Accepted' when b.status=4 then 'Cancelled By Customer' else 'Cancel' end as status_,b.status,b.cancel_reason from booking_requests as b left join users as u on b.user_id= u.id left join events as e on e.id=b.type_id where b.booking_type=1 and b.id='$booking_id'" ;     
         $bookData = DB::select($carQry); 
 		//echo "<pre>";print_r($bookData);die; 
 		$book['book_id']=!empty($bookData[0]->id)?$bookData[0]->id:"";
@@ -46,6 +46,7 @@ class BookingController extends Controller
 		$book['booking_request_date']=!empty($bookData[0]->booking_request_date)?$bookData[0]->booking_request_date:"";
 		$book['status_']=!empty($bookData[0]->status_)?$bookData[0]->status_:"";
 		$book['status']=!empty($bookData[0]->status)?$bookData[0]->status:"";
+        $book['cancel_reason']=!empty($bookData[0]->cancel_reason)?$bookData[0]->cancel_reason:"";
 		$user_id=!empty($bookData[0]->user_id)?$bookData[0]->user_id:"";
 		
 		$userInfo = DB::table('users')
@@ -65,14 +66,19 @@ class BookingController extends Controller
         $data['title']=siteTitle(); 
         $session_data=session()->get('admin_session');
         $user_id=$session_data['userId'];
-        $eventImg = config('constants.event_image'); 
+        
+        $s3BaseURL = config('constants.s3_baseURL');
+        $eventImg_ = config('constants.event_image'); 
+        $eventImg=$s3BaseURL.$eventImg_ ;           
+         
+
         if($session_data['userType']== 3){ 
-        $carQry="select b.id,concat(u.first_name,' ',u.last_name) as name,u.email,u.phone,e.event_name, DATE_FORMAT(b.created_at,'%d %M %Y') as booking_request_date,case when b.status=1 then 'Pending' when b.status=2 then 'Accepted' else 'Cancel' end as status_,b.status,DATE_FORMAT(b.created_at,'%Y-%m-%d') as booking_date,case when (eimg.image is null || eimg.image='') then '' else concat('".$eventImg."',eimg.image) end as image from booking_requests as b left join users as u on b.user_id= u.id left join events as e on e.id=b.type_id left join event_images as eimg on e.id=eimg.event_id where b.booking_type=1" ;     
+        $carQry="select b.id,concat(u.first_name,' ',u.last_name) as name,u.email,u.phone,e.event_name, DATE_FORMAT(b.created_at,'%d %M %Y') as booking_request_date,case when b.status=1 then 'Pending' when b.status=2 then 'Accepted' when b.status=4 then 'Cancelled By Customer' else 'Cancel' end as status_,b.status,DATE_FORMAT(b.created_at,'%Y-%m-%d') as booking_date,case when (eimg.image is null || eimg.image='') then '' else concat('".$eventImg."',b.type_id,'/',eimg.image) end as image,b.cancel_reason from booking_requests as b left join users as u on b.user_id= u.id left join events as e on e.id=b.type_id left join event_images as eimg on e.id=eimg.event_id where b.booking_type=1" ;     
         $carData = DB::select($carQry); 
         $tableData = Datatables::of($carData)->make(true);
         //echo "<pre>";print_r($tableData);die; 
         }else{
-          $carQry="select b.id,concat(u.first_name,' ',u.last_name) as name,u.email,u.phone,e.event_name, DATE_FORMAT(b.created_at,'%d %M %Y') as booking_request_date,case when b.status=1 then 'Pending' when b.status=2 then 'Accepted' else 'Cancel' end as status_,b.status,DATE_FORMAT(b.created_at,'%Y-%m-%d') as booking_date,case when (eimg.image is null || eimg.image='') then '' else concat('".$eventImg."',eimg.image) end as image from booking_requests as b left join users as u on b.user_id= u.id left join events as e on e.id=b.type_id left join event_images as eimg on e.id=eimg.event_id where b.booking_type=1 and b.user_id='$user_id'" ;     
+          $carQry="select b.id,concat(u.first_name,' ',u.last_name) as name,u.email,u.phone,e.event_name, DATE_FORMAT(b.created_at,'%d %M %Y') as booking_request_date,case when b.status=1 then 'Pending' when b.status=2 then 'Accepted' when b.status=4 then 'Cancelled By Customer' else 'Cancel' end as status_,b.status,DATE_FORMAT(b.created_at,'%Y-%m-%d') as booking_date,case when (eimg.image is null || eimg.image='') then '' else concat('".$eventImg."',b.type_id,'/',eimg.image) end as image,b.cancel_reason from booking_requests as b left join users as u on b.user_id= u.id left join events as e on e.id=b.type_id left join event_images as eimg on e.id=eimg.event_id where b.booking_type=1 and (select user_id from events where id=b.type_id)=$user_id" ;     
         $carData = DB::select($carQry); 
         $tableData = Datatables::of($carData)->make(true);
 
@@ -108,17 +114,26 @@ class BookingController extends Controller
     }
 	
 	public function goodies_booking_datatable(Request $request){
+
         $data['title']=siteTitle();
         $session_data=session()->get('admin_session');
         $user_id=$session_data['userId']; 
-        $goosiesImg = config('constants.goodies_image');
+
+        $s3BaseURL = config('constants.s3_baseURL');
+        $goodiesImg_ = config('constants.goodies_image');
+        $goodiesImg = $s3BaseURL.$goodiesImg_;   
+                   
+        
+        
+
+
         if($session_data['userType']== 3){  
-        $carQry="select b.id,concat(u.first_name,' ',u.last_name) as name,u.email,u.phone,g.title as title, DATE_FORMAT(b.created_at,'%d %M %Y') as booking_request_date,case when b.status=1 then 'Pending' when b.status=2 then 'Accepted' else 'Cancel' end as status_,b.status,DATE_FORMAT(b.created_at,'%Y-%m-%d') as booking_date,case when (g.image is null || g.image='') then '' else concat('".$goosiesImg."',g.image) end as image from booking_requests as b left join users as u on b.user_id= u.id left join goodies as g on g.id=b.type_id where b.booking_type=2" ;       
+        $carQry="select b.id,concat(u.first_name,' ',u.last_name) as name,u.email,u.phone,g.title as title, DATE_FORMAT(b.created_at,'%d %M %Y') as booking_request_date,case when b.status=1 then 'Pending' when b.status=2 then 'Accepted' else 'Cancel' end as status_,b.status,DATE_FORMAT(b.created_at,'%Y-%m-%d') as booking_date,case when (g.image is null || g.image='') then '' else concat('".$goodiesImg."',b.type_id,'/',g.image) end as image from booking_requests as b left join users as u on b.user_id= u.id left join goodies as g on g.id=b.type_id where b.booking_type=2" ;       
         $carData = DB::select($carQry);   
         $tableData = Datatables::of($carData)->make(true);
         //echo "<pre>";print_r($tableData);die; 
         }else{
-          $carQry="select b.id,concat(u.first_name,' ',u.last_name) as name,u.email,u.phone,g.title as title, DATE_FORMAT(b.created_at,'%d %M %Y') as booking_request_date,case when b.status=1 then 'Pending' when b.status=2 then 'Accepted' else 'Cancel' end as status_,b.status,DATE_FORMAT(b.created_at,'%Y-%m-%d') as booking_date,case when (g.image is null || g.image='') then '' else concat('".$goosiesImg."',g.image) end as image from booking_requests as b left join users as u on b.user_id= u.id left join goodies as g on g.id=b.type_id where b.booking_type=2 and b.user_id='$user_id'" ;         
+          $carQry="select b.id,concat(u.first_name,' ',u.last_name) as name,u.email,u.phone,g.title as title, DATE_FORMAT(b.created_at,'%d %M %Y') as booking_request_date,case when b.status=1 then 'Pending' when b.status=2 then 'Accepted' else 'Cancel' end as status_,b.status,DATE_FORMAT(b.created_at,'%Y-%m-%d') as booking_date,case when (g.image is null || g.image='') then '' else concat('".$goodiesImg."',b.type_id,'/',g.image) end as image from booking_requests as b left join users as u on b.user_id= u.id left join goodies as g on g.id=b.type_id where b.booking_type=2 and (select user_id from goodies where id=b.type_id)=$user_id" ;         
         $carData = DB::select($carQry);     
         $tableData = Datatables::of($carData)->make(true);
 
@@ -129,10 +144,14 @@ class BookingController extends Controller
 	public function bookingStatus(Request $request)    
     {
         $id=$request->id ; 	
-        //echo $id;die; 
+        //echo $id;die;// 
         $qry="update booking_requests set status=2 where id=".$id;
                DB::select($qry);
-               $a=$this->sendBookingEmail($id);  
+
+           $isSendMail = config('constants.isSendMail');
+           if($isSendMail==1){
+               $a=$this->sendBookingEmail($id); 
+               } 
                $qry1="update booking_requests set email_status=2 where id=".$id;
                DB::select($qry1);                          
               echo successResponse([],'changed status successfully');  	
@@ -284,7 +303,10 @@ class BookingController extends Controller
         try{ 
             $qry="update booking_requests set status=3 where id=".$id;
             DB::select($qry); 
+             $isSendMail = config('constants.isSendMail');
+           if($isSendMail==1){
             $a=$this->sendBookingEmail($id);  
+              }
                $qry1="update booking_requests set email_status=2 where id=".$id;
                DB::select($qry1);
                     

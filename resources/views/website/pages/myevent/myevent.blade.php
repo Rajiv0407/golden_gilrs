@@ -1,4 +1,3 @@
-
 @extends('includes.website.ajax_template')
 @section('content')
 
@@ -7,10 +6,10 @@
         <div class="tabmenu">
             <ul class="nav nav-tabs">
                 <li class="nav-item">
-                    <button class="nav-link active" id="eventstab" type="button">Events</button>
+                    <button class="nav-link active" id="eventstab" type="button" onclick="ajax_myevent('<?php echo $requestId; ?>',0)">Events</button>
                 </li>
                 <li class="nav-item">
-                    <button class="nav-link" id="gdiesclk" type="button">Goodies</button>
+                    <button class="nav-link" id="gdiesclk" type="button" onclick="ajax_mygoodies('<?php echo $requestId; ?>',0)">Goodies</button>
                 </li>
             </ul>
         </div>
@@ -18,122 +17,78 @@
 
     <div class="myevntsection">
         <div id="sm_evnt" class="sellbox s_mevnt">
-		<?php if(count($order) > 0 ){ ?>
-		 <?php foreach($order as $orders){ //echo "<pre>";print_r($orders); ?>
-            <div class="card_rptr">
-                <div class="media">
-                    <img src="<?php echo $orders['image'];  ?>" alt="">
-                    <a href="javascript:void(0);" data-fancybox data-src="<?php echo $orders['image'];  ?>" data-caption="<?php echo $orders['event_name'];  ?>"><i class="ri-zoom-in-fill"></i></a>
-                </div>
-                <div class="crdinfo">
-                    <h3><?php echo $orders['event_name'];  ?></h3>
-                    <div class="cibx">
-                        <div class="form-group">
-                            <label for="">Event Address</label>
-                            <h4><?php echo $orders['event_address'];  ?></h4>
-                        </div>
-                        <div class="form-group">
-                            <label for="">Order ID</label>
-                            <h4>#<?php echo $orders['order_id'];  ?></h4>
-                        </div>
-                        <div class="form-group">
-                            <label for="">Order Date</label>
-                            <h4><?php echo $orders['order_date'];  ?></h4>
-                        </div>
-                        <div class="form-group">
-                            <label for="">Order Status</label>
-                            <h4><?php echo $orders['order_status'];  ?></h4>  
-                        </div>
-                        <div class="form-group">
-                            <label for="">Ticket Qty</label>
-                            <h4><?php echo $orders['no_ticket'];  ?></h4>
-                        </div>
-                        <div class="form-group">
-                            <label for="">Type</label>
-                            <h4><?php echo $orders['event_fee_type'];  ?></h4>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- // -->
-		 <?php } ?>
-		 <?php }else{ ?>
-		    <div class="no_record_box">
-				<div class="media"><img src="{{URL::to('/public/website')}}/images/no_record/c_norecrd.png" alt=""> </div>
-				<h3>No record Found</h3>
-				<p>MyEvent Not found</p>  
 
-			  </div>
-		 <?php } ?>
-            
         </div>
 
         <div id="sm_gds" class="sellbox s_mgds" style="display: none;">
-		<?php if(count($god_order) > 0 ){ ?>
-		 <?php foreach($god_order as $god_orders){  ?>
-            <div class="card_rptr">
-                <div class="media">
-                    <img src="<?php echo $god_orders['image'];  ?>" alt="">  
-                    <a href="javascript:void(0);" data-fancybox data-src="<?php echo $god_orders['image'];  ?>" data-caption="<?php echo $god_orders['goodies_name'];  ?>"><i class="ri-zoom-in-fill"></i></a>
-                </div>
-                <div class="crdinfo">
-                    <h3><?php echo $god_orders['goodies_name'];  ?></h3>
-                    <div class="cibx">
+
+
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade basic_infofrom bk_modal" id="cancel_booking" tabindex="-1" role="dialog" aria-bs-labelledby="exampleModalCenterTitle" aria-bs-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cancel your booking</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-bs-label="Close">
+                    <img src="{{URL::to('/public/website')}}/images/icon/close_button.png" alt="">
+                </button>
+            </div>
+            <div class="modal-body">
+
+
+
+                <form id="cnacelBooking_info" action="javascript:void(0);" method="post">
+                    <div class="aef_bx">
+                        <!-- <h3>Cancel your booking</h3> -->
+                        <h6>Are you sure you want to cancel your booking?</h6>
+                        <input type="hidden" name="bookingId" id="bookingId">
                         <div class="form-group">
-                            <label for="">Event Address</label>
-                            <h4><?php echo $god_orders['goodies_address'];  ?></h4>
+                            <label for=""><b>Please give Reason of Cancellation</b></label>
+                            <textarea class="form-control" name="cancelReason" id="cancelReason" cols="12" rows="5"></textarea>
+                            <span id="err_cancelReason" class="err" style="color:red"></span>
                         </div>
-                        <div class="form-group">
-                            <label for="">Order ID</label>
-                            <h4>#<?php echo $god_orders['order_id'];  ?></h4>
-                        </div>
-                        <div class="form-group">
-                            <label for="">Order Date</label>
-                            <h4><?php echo $god_orders['order_date'];  ?></h4>
-                        </div>
-                        <div class="form-group">
-                            <label for="">Order Status</label>
-                            <h4><?php echo $god_orders['order_status'];  ?></h4>
-                        </div>
-                        <div class="form-group">
-                            <label for="">Ticket Qty</label>
-                            <h4><?php echo $god_orders['no_ticket'];  ?></h4>
-                        </div>
-                        <div class="form-group">
-                            <label for="">Type</label>
-                            <h4><?php echo $god_orders['goodies_fee_type'];  ?></h4>
+                        <div class="button-group">
+                            <button type="button" class="btn" onclick="cancelBooking()">Yes, Cancel Booking</button>
+                            <!--  <button type="button" class="btn" data-bs-dismiss="modal"
+                                aria-bs-label="Close">Cancel</button> -->
                         </div>
                     </div>
-                </div>
+                </form>
             </div>
-		 <?php } ?>  
-          <?php }else{ ?>
-		    <div class="no_record_box">
-				<div class="media"><img src="{{URL::to('/public/website')}}/images/no_record/c_norecrd.png" alt=""> </div>
-				<h3>No record Found</h3>
-				<p>Goodies Not found</p>    
-
-			  </div>
-		 <?php } ?>    
-            
         </div>
     </div>
 </div>
 <script>
-$("#eventstab").click(function (){
+    $(document).ready(function() {
+        var requestId = '<?php echo $requestId; ?>';
+        ajax_myevent(requestId, 0);
+    });
+
+    $("#eventstab").click(function() {
         $("#sm_evnt").show();
         $("#sm_gds").hide();
         $("#eventstab").addClass('active');
-        $("#gdiesclk").removeClass('active');        
+        $("#gdiesclk").removeClass('active');
     });
 
-    $("#gdiesclk").click(function (){
+    $("#gdiesclk").click(function() {
         $("#sm_evnt").hide();
         $("#sm_gds").show();
         $("#eventstab").removeClass('active');
-        $("#gdiesclk").addClass('active');        
+        $("#gdiesclk").addClass('active');
     });
 
+
+
+
+
+    function cancelModal(eventId) {
+        $('#bookingId').val(eventId);
+    }
 </script>
 
 @stop

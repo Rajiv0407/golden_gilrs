@@ -65,6 +65,298 @@ $(document).ready(function () {
 });
 
 
+ function ajax_myevent(requestId,page){
+
+     $('#loader_spineer').show();
+     if(page==0){
+      $('#sm_gds').html('');
+       $('#sm_evnt').html('');
+     }
+    
+      ajaxCsrf();
+     $.ajax({
+          type: "post",
+          url: baseUrl + '/ajax_myevent/'+requestId, 
+          data:{"page":parseInt(page)+1},        
+          beforeSend: function() {
+          
+          },
+          success: function(res) {  
+                if(parseInt(page) > 0){
+                  $('#homeLoadmore').remove();
+                }
+
+               $('#loader_spineer').hide();
+               $('#sm_evnt').append(res);
+           
+          }
+
+        });
+  }
+
+
+    function ajax_mygoodies(requestId,page){
+           
+     $('#loader_spineer').show();
+      if(page==0){
+
+        $('#sm_evnt').html('');
+       $('#sm_gds').html('');
+     }
+    
+     ajaxCsrf();
+     $.ajax({
+          type: "post",
+          url: baseUrl + '/ajax_mygoodies/'+requestId,    
+          data:{"page":parseInt(page)+1},        
+          beforeSend: function() {
+          
+          },
+          success: function(res) {  
+               
+             if(parseInt(page) > 0){
+                  $('#homeLoadmore').remove();
+                }
+
+               $('#loader_spineer').hide();
+               $('#sm_gds').append(res);
+           
+          }
+
+        });
+  }
+
+function cancelBooking(){
+         
+        //cnacelBooking_info
+        var cancelReason = $('#cancelReason').val();
+        var eventId = $('#bookingId').val();
+
+            $('.err').html('');
+        if(cancelReason==''){
+            $('#err_cancelReason').html('Please enter event booking cancel reason.');
+            return false ;
+        }else{
+             $('#loader_spineer').show(); 
+
+              var formData = $('#cnacelBooking_info').serialize(); //new 
+         ajaxCsrf();
+        $.ajax({
+          type: "post",
+          url: baseUrl + '/cancelEvent',
+          data: formData,
+          beforeSend: function() {
+          
+          },
+          success: function(res) {
+           
+               $('#loader_spineer').hide();
+
+                 $('#bookingId').val(0);
+               if(res==1){
+                $('#cancelledEventBooking_'+eventId).hide();
+                $('#cancelledEvent_'+eventId).show();
+                $('#cancel_event_succ').show();
+                $('#cancel_booking').modal('hide');               
+                
+               }
+               
+            setTimeout(function(){
+                $('#cancel_event_succ').hide();
+            },2000);
+          }
+
+        });
+
+        }
+  }
+   
+function forgot_password() {
+      var email = $('#forgot_email').val();
+      $('.err').html('');
+      if (email == '') {
+        $('#error_forgot_email').html('Please enter email');
+      }else if(!validateEmail(email)){
+      $('#error_forgot_email').text('Please enter valid email.');
+     } else {
+       $('#loader_spineer').show();
+        var formData = $('#forgotPasswordForm').serialize();
+        ajaxCsrf();
+        $.ajax({
+          type: "post",
+          url: baseUrl + '/forgot_password',
+          data: formData,
+          beforeSend: function() {
+            $('#floadingGife').show();
+            //ajax_before();
+          },
+          success: function(res) {
+      $('#loader_spineer').hide();
+            // ajax_success() ;
+            if (res == 2) {
+             
+              $('#forgot_email').val("");
+              $("#forgot_user_name_password").html("Email has been sent on your registerd email id");
+
+            } else if (res == 3) {
+             
+              $("#error_forgot_email").html("This email id not register with us");
+
+            } else {
+               $("#err_forgot_user_name_password").html("Something went wrong.");
+            }
+
+            setTimeout(function(){
+              $("#err_forgot_user_name_password").html("");
+               $("#error_forgot_email").html("");
+               $("#forgot_user_name_password").html("");
+            },2000);
+          }
+
+        });
+      }
+    }
+
+ function loginUser(){
+    
+  var usrEmail=$('#user_email').val();
+  var usrPassword = $('#user_password').val();
+
+  $('.err').text('');
+
+  if(usrEmail==''){
+    $('#err_user_email').text('Please enter email');
+  }else if(usrPassword==''){  
+    $('#err_user_password').text('Please enter password');
+  }else{
+    
+     $('#loader_spineer').show(); 
+    
+        var formData = $('#login_form').serialize(); //new 
+
+    ajaxCsrf();
+        $.ajax({
+          type: "post",
+          url: baseUrl + '/do_login',
+          data: formData,
+          beforeSend: function() {
+          
+          },
+          success: function(res) {
+           
+               $('#loader_spineer').hide();
+                 
+               if(res==1){
+                $('#login_succ').show();
+                $('#login_post').modal('hide');
+                
+                 location.reload();
+               }else if(res==="2"){
+                $('#err_login_form').text('Invalid Credentials.');
+               }else{
+                 $('#err_login_form').text('Something went wrong');
+               }
+             // 
+            
+            setTimeout(function(){
+                $('#login_succ').hide();
+              $('#err_login_form').text('');
+            },2000);
+          }
+
+        });
+
+  }
+  }
+
+  function usrSignup(){
+
+     var firstName = $('#first_name').val();
+     var last_name = $('#last_name').val();
+     var signup_emal = $('#signup_emal').val();
+     var usr_mobileNo = $('#usr_mobileNo').val();
+     var usr_dob = $('#usr_dob').val();
+     var usr_nationality = $('#usr_nationality').val();
+     var signup_password = $('#signup_password').val();
+     $('.err').text('');
+     if(firstName==''){
+      $('#err_first_name').text('Please enter first name.');
+     }else if(last_name==''){
+      $('#err_last_name').text('Please enter last name.');
+     }else if(signup_emal==''){
+      $('#err_signup_emal').text('Please enter email.');
+     }else if(!validateEmail(signup_emal)){
+      $('#err_signup_emal').text('Please enter valid email.');
+     }else if(usr_mobileNo==''){
+      $('#err_usr_mobileNo').text('Please enter mobile number.');
+     } else if (usr_mobileNo.length < 8) {
+        $('#err_usr_mobileNo').html('Please enter minimum 8 digits');
+      } else if (usr_mobileNo.length > 14) {
+        $('#err_usr_mobileNo').html('Please enter maximum 14 digits');
+      }else if(usr_dob==''){  
+      $('#err_usr_dob').text('Pleas select Date of birth');
+     }else if(usr_nationality==''){
+      $('#err_usr_nationality').text('Please enter nationality');
+     }else if(signup_password==''){
+      $('#err_signup_password').text('Please enter password');
+     }else if (signup_password.length < 8) {
+        $('#err_signup_password').html('Please enter maximum 8 characters');
+      } else{
+
+       $('#loader_spineer').show();
+       
+  
+         var formData = new FormData($('#usrRegisterForm')[0]);
+
+        ajaxCsrf();
+        $.ajax({
+          type: "post",
+          url: baseUrl + '/Signup',
+          data: formData,
+          contentType: false,
+          processData: false,
+          dataType: 'json',    
+          beforeSend: function() {
+          },
+          success: function(res) {
+            if(res.status == 1) {           
+              $('#usrRegisterForm')[0].reset();
+                $('#signup_succ').show();
+                $('#login_post').modal('hide');
+                
+                 location.reload();
+             
+            } else if (res.status == 2) {
+              $('#loader_spineer').hide();
+              $('#err_signup_emal').html('Email id already Registered');
+            } else {
+              $('#loader_spineer').hide();
+              $('#err_signup_form').text('Something went wrong');
+            }
+          }
+
+        });
+     }
+
+  }
+
+function validateEmail($email) {
+  var emailReg = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/;
+  return emailReg.test( $email );
+}
+
+ function mobilepost(){        
+        $("#post_message_id").show();            
+        $("#post_message_id").addClass('active');
+        $("body").addClass('overflow-hidden');
+    }
+
+    function mobilepostclose(){
+        $("#post_message_id").hide();            
+        $("#post_message_id").removeClass('active');
+        $("body").removeClass('overflow-hidden');
+    }
+
 
 if(window.matchMedia("(max-width: 767px)").matches){
     
@@ -87,6 +379,98 @@ if(window.matchMedia("(max-width: 767px)").matches){
 } else{ } 
 
 
+function update_profile(){   
+        var hair_color = $('#hair_color').val();
+        var waist = $('#waist').val();
+        var height = $('#height').val();
+        var bust = $('#bust').val();
+        var weight = $('#weight').val();
+        var hips = $('#hips').val();
+        var hair_style = $('#hair_style').val();
+        var eye_color = $('#eye_color').val();
+        var smoking = $('#smoking').val();
+        var interests = $('#interests').val();
+        var marital_status = $('#marital_status').val();
+        var about_self = $('#about_self').val();
+        
+        // console.log($.trim(waist));
+        // $('.err').html('');
+
+        // if(hair_color==''){
+        //     $('#error_edit_hair_color').html('Please enter hair color') ;
+        // }
+        // else if(waist==''){
+        //     $('#error_edit_waist').html('Please enter waist size') ;
+        // }
+        // else if(height==''){
+        //     $('#error_edit_height').html('Please enter height') ;
+        // }
+        // else if(bust== ''){
+        //     $('#error_edit_bust').html('Please enter Bust (Inches)') ;
+        // }
+        // else if(weight== ''){
+        //     $('#error_edit_weight').html('Please enter weight') ;
+        // }
+        // else if(hips== ''){
+        //     $('#error_edit_hips').html('Please enter hips size') ;
+        // }
+        // else if(hair_style== ''){
+        //     $('#error_edit_hair_style').html('Please enter hair style') ;
+        // }
+        // else if(eye_color== ''){
+        //     $('#error_edit_eye_color').html('Please enter eye color') ;
+        // }
+        // else if(smoking== ''){
+        //     $('#error_edit_smoking').html('Please select smoking') ;
+        // }
+        // else if(interests== ''){
+        //     $('#error_edit_interests').html('Please enter interests') ;
+        // }
+        // else if(marital_status== ''){
+        //     $('#error_edit_marital_status').html('Please enter marital status');
+        // }
+        // else if(about_self== ''){
+        //     $('#error_edit_about').html('Please enter about');
+        // }
+        // else{
+               //var formData = $('#profile_forms').serialize();
+                var formData=new FormData($('#update_profile')[0]);             
+                 ajaxCsrf();
+        
+                 $.ajax({
+            type:"post",
+            url:baseUrl+'/update_profile',
+            data:formData,
+            contentType:false,
+            processData:false,  
+            dataType:'json',            
+            beforeSend:function()
+            {
+                 //ajax_before();
+            },
+            success:function(res)
+            {
+                // ajax_success() ;
+            if(res){
+                $(".rgt_usrinfo").load(".rgt_usrinfo");
+                $('#editbasicinfo').modal('hide');
+                $('#basic_profile_info').show();
+                location.reload();
+                //$(".right_menu").load(location.href + " .right_menu");
+                setTimeout(function() {
+                   $("#basic_profile_info").hide();  
+                }, 2000);               
+            }else{
+               statusMesage('something went wrong','error');
+            }  
+            }
+
+            });
+        //   }
+    }
+function refreshDiv(){
+         $("#web_container").load(location.href + " #web_container");
+      } 
 function deleteVideo(id){
       
     var check = confirm("Are you sure want to delete this video ?");
@@ -173,22 +557,22 @@ $(function () {
 
 
    // $('#urslider').slick({
-     $("#urslider").not('.slick-initialized').slick({
-        slidesToShow: 1,
-        slidesToScroll: 1,
-        autoplay: true,
-        autoplaySpeed: 2000,
-      });
+   //   $("#urslider").not('.slick-initialized').slick({
+   //      slidesToShow: 1,
+   //      slidesToScroll: 1,
+   //      autoplay: true,
+   //      autoplaySpeed: 2000,
+   //    });
 
 
 
-     $("#story_view_slider").not('.slick-initialized').slick({
-        infinite: false,
-        speed: 100,
-        fade: true,
-        cssEase: 'linear'
+   //   $("#story_view_slider").not('.slick-initialized').slick({
+   //      infinite: false,
+   //      speed: 100,
+   //      fade: true,
+   //      cssEase: 'linear'
 
-    });
+   //  });
 
 })
 
@@ -450,63 +834,7 @@ function stories_popup(){
     
 
 
-    function add_story(){
-        
-        var story_des = $('#story_des').val();
-        var story_file = $('#file-upload').val();
-        var fileUploadSize = $('#file-upload')[0].files[0] ;
-        var fileSize = 25 * 1000000 ;
-      
-        $('.err').html('');
-        if(story_des==''){
-            $('#error_story_des').html('Please enter descrption') ;
-        }else if(fileUploadSize==undefined){
-           $('#error_story_file').html('Please select file') ;
-        }else if(fileUploadSize.size > fileSize){
-            alert('Please upload file less then 25 MB');
-            return false ;       
-        }else{
-      
-             $('#updateStory_loadingGife').css('display','block');
-          var formData=new FormData($('#add_stroy_form_id')[0]);
-          ajaxCsrf();
-          //$('#loader_spineer').show();
-            $.ajax({
-                type:"post",
-                url:baseUrl+'/stories_upload',
-                data:formData,
-                contentType:false,
-                processData:false,
-                async:true,
-                dataType:'json',
-                beforeSend: function () {
-                    
-                },
-                success:function(res)
-                {
-                    //$('#loader_spineer').hide();
-                     $('#updateStory_loadingGife').css('display','none');
-                if(res == 1){
-                    $("#add_stroy_form_id")[0].reset();
-                    $('.add_story_modal').modal('hide');
-                    //$(".up_story_id").load(location.href + " .up_story_id");
-                    /* $(".item").append("<div class='gallary_img' id='story_uploaded_ids_'"+res.id+"'><img src='"+res.file+"' alt=''><div class='cont_stories'>"+res.name+"</div>  <a class='btn' data-fancybox data-src='"+res.file+"' data-caption='"+res.name+"' href='javascript:void();'></a></div>");
-                      */
-                     $("#story_upload_succ").show();
-                     setTimeout(function() {
-                           $("#story_upload_succ").hide();
-                        }, 2000);
-                     location.reload();
-
-                }else{
-                   statusMesage('something went wrong','error');
-                }
-                }
-
-                });
-              }
-        }
-
+   
 
 function view_stroy_model(id){
     ajaxCsrf();
@@ -1041,7 +1369,7 @@ function save_comment(id, type = 0,isLogin=0) {
             },
             success: function (res) {
             // debugger ;
-
+            
                 // ajax_success() ;
                 $('#loader_spineer').hide();
                 if (res) {
@@ -1694,9 +2022,14 @@ function life_style() {
     });
 }
 
-function send_booking_confirm() {
-
- $("#tsk_mdlBox_body1").modal('show');
+function send_booking_confirm(isLogin=0) {
+   if(isLogin===0){
+        $('#login_post').modal('show');
+        return false ;
+     }else{
+        $("#tsk_mdlBox_body1").modal('show');       
+     }
+ 
 
 }
 function Booking_yes(){
@@ -1746,9 +2079,15 @@ function save_event_booking() {
 
 }
 
-function send_goodies_confirm() {
+function send_goodies_confirm(isLogin=0) {
 
-    $("#tsk_mdlBox_body2").modal('show');
+     if(isLogin===0){
+        $('#login_post').modal('show');
+        return false ;
+     }else{
+        $("#tsk_mdlBox_body2").modal('show');
+     }
+    
         //save_goodies_booking();
 }
 
@@ -2372,10 +2711,10 @@ function save_post1() {
 }
 
 function post_update(type=0) {
-     
+
     var post_text = $('#edit_post_des').val();
     $('.err').html('');
-    if (post_text == '') {
+    if (post_text == '' && filesToUploadPostUpdate.length==0) {
         $('#edit_error_post_text').html('Please enter post text');
     } else {
 
@@ -2387,7 +2726,7 @@ function post_update(type=0) {
             //const formData = new FormData(event.target);
             formData.delete('image[]');
             // debugger ;
-            //        console.log('ddd'+JSON.stringify(filesToUploadPost.values()));
+            // //       console.log('ddd'+JSON.stringify(filesToUploadPost.values()));
             for (const file of filesToUploadPostUpdate) {
                 formData.append('image[]', file);
             }
@@ -2759,6 +3098,7 @@ function ajax_success(){
 
 $('.select option').each(function(){
   const img = $(this).attr("data-thumbnail");
+
   const country = $(this).attr("data-country");
   const text = this.innerText;
   const value = $(this).val();
@@ -2780,7 +3120,7 @@ $('#a li').click(function(){
    const item = `<li><img src="${img}" alt="" value="${value}"/><span>${text}</span></li>`;
   $('.btn-select').html(item).attr('value', value);
   $('.lang-select').toggleClass("open");
-
+   
     ggCountry(country,value,img);
 });
 
@@ -2797,4 +3137,22 @@ $(document).on("click", function(event){
  });
 
 
+ function ggCountry(countryName,value,imgUrl){   
+         
+    var flag_ ='<?php echo $flag ; ?>' ;
+    var gc=$('#gg_country').val() ;
+    $('#ggCountrId').text(countryName);
+       ajaxCsrf();
+      $.ajax({
+        type: "post",
+        url: baseUrl + '/updateCountrySession',
+        data:{'countryName':countryName,'value':value,'imgUrl':imgUrl},
+        success: function (response) {
+          //if(flag_==1){
+            location.reload();
+         // }
+           
+        }
+    });
 
+}

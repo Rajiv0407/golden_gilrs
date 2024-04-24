@@ -1,6 +1,9 @@
 <?php 
 $userId=isset($userInfo->id)?$userInfo->id:'' ; 
-$name = $userInfo->first_name.' '.$userInfo->last_name;
+$firstName = isset($userInfo->first_name)?$userInfo->first_name:'';
+$lastName = isset($userInfo->last_name)?$userInfo->last_name:'';
+$name=$firstName.' '.$lastName;
+
 $mobileNumber = isset($userInfo->phone)?$userInfo->phone:'' ;
 $email = isset($userInfo->email)?$userInfo->email:'' ;
 $dob = isset($userInfo->dob)?$userInfo->dob:'' ;
@@ -27,10 +30,15 @@ $address_line_2 = isset($userInfo->address_line_2)?$userInfo->address_line_2:'' 
 $zip_code = isset($userInfo->zip_code)?$userInfo->zip_code:'' ;
 
 $appImg = isset($userInfo->image)?$userInfo->image:'' ;
+$s3BaseURL = config('constants.s3_baseURL');
+$usrImg = config('constants.user_profile_img_s3');
+                   
+       
 $imgPath = url('/').'/public/admin/images/avtar_i.png';
 
 if($appImg!=''){
-    $imgPath_=url('/').'/storage/app/public/user_image/'.$appImg ;
+    //$imgPath_=url('/').'/storage/app/public/user_image/'.$appImg ;
+     $imgPath_=$s3BaseURL.$usrImg.$userId.'/'.$appImg ;
 }else{
     $imgPath_ = $imgPath ;
 }    
@@ -107,8 +115,8 @@ if($appImg!=''){
                             </p>
 							<p>
                                 <span>Weight : </span>
-								<?php if(!empty($weight)){ ?>
-                                 <span><?php echo $weight; ?></span>
+								<?php if(!empty($waist)){ ?>
+                                 <span><?php echo $waist; ?></span>
 								 <?php }else{ ?>
 								<span>NA</span>
 								<?php } ?>

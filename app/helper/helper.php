@@ -13,6 +13,19 @@ function auth_chat(){
 
 }
 
+function checkIsloginOrNot(){
+
+    $get_SessionData = Session::get('user_session');
+    
+    if(empty($get_SessionData)){
+      
+        return false ;
+    }else{
+      return true ;
+    }
+
+}
+
 function isMobileDev(){
     if(!empty($_SERVER['HTTP_USER_AGENT'])){
        $user_ag = $_SERVER['HTTP_USER_AGENT'];
@@ -314,6 +327,73 @@ function authguard(){
          }
    }
    
+     function sendCancelledBookingEmail(Array $data,$type=1){   
+      //
+       $data = array(
+                'email' => $data['email'],
+                'user_name' => $data['user_name'],
+                'booking_id' => $data['booking_id'],
+                'booking_name' => $data['booking_name'],
+                'address' => $data['address'],
+                'date' => $data['date'],
+                'subject' =>  $data['subject'],
+                'status' => $data['status'],
+                'time' => $data['time'],
+                'booking_type'=>$data['booking_type'],
+                'cityName'=>$data['cityName'] ,
+                'countryName'=>$data['countryName'] ,
+                'no_ticket'=>$data['no_ticket'],
+                'contact_number'=>$data['contact_number'],
+                'cancel_reason'=>$data['cancel_reason']
+         );
+
+       //  $data = array(
+       //    'email' => 'amitshukla.intigate@gmail.com',
+       //    'user_name' => 'Amit Shukla',
+       //    'booking_id' => 1021,
+       //    'booking_name' => 'Test',
+       //    'address' => 'Gijhore',
+       //    'date' => '2024-01-05',
+       //    'subject' =>'Test',
+       //    'status' => 'Captured',
+       //    'time' => '20:50:00',
+       //    'booking_type'=>'Event',
+       //    'cityName'=>'Noida' ,
+       //    'countryName'=>'India' ,
+       //    'no_ticket'=>5,
+       //    'contact_number'=>'7289057538'
+       //  );
+
+       // echo view('emails.cancel_booking',$data);
+       //        exit ;
+       if($type==1){
+           Mail::send('emails.cancel_booking', $data, function($message) use ($data) {
+          $to= $data['email'] ;
+          $recieverName = "" ;
+          $subject = $data['subject'] ;
+          $message->to($to,$recieverName)->subject($subject);
+                    
+        });
+       }else if($type==2){
+           Mail::send('emails.admin_cancel_booking', $data, function($message) use ($data) {
+            $contactus_email = config('constants.contactus_email');
+            $to=$contactus_email ;
+          $recieverName = "" ;
+          $subject = $data['subject'] ;
+          $message->to($to,$recieverName)->subject($subject);
+                    
+        });
+       }
+       
+        
+        if (Mail::failures()) {
+          return false ;
+         }else{
+          return true ;
+         }
+   }
+
+
    function sendBookingToEmail(Array $data){   
 
        $data = array(
@@ -539,7 +619,11 @@ function getFollowerAndFollowing($userId){
 
 function getFollowerList($userId){
 
-   $usrImgPath=url('/').'/storage/app/public/user_image/' ;
+  $s3BaseURL = config('constants.s3_baseURL');
+  $usrImg = config('constants.user_profile_img_s3'); 
+  $usrImgPath=$s3BaseURL.$usrImg ;
+
+   //$usrImgPath=url('/').'/storage/app/public/user_image/' ;
    $defaultImgPath=url('/').'/storage/app/public/user_image/user.png';
 //DB::enableQueryLog();
    $data=session()->get('user_session');
@@ -547,7 +631,7 @@ function getFollowerList($userId){
 // DB::raw(" case when user_follows.followed_user_id=$loginUserId then 1 else 0 end as isFollow"),
    //DB::enableQueryLog();
    $followerList_ = DB::table('user_follows')
-            ->select('users.id',DB::raw(" concat(users.first_name,' ',users.last_name) as name "),'followBack','users.first_name','users.last_name', DB::raw("case when users.image is null then concat('".$defaultImgPath."') else concat('".$usrImgPath."',users.image) end as image"),'user_profile.age','user_profile.country','user_profile.city','user_profile.lat','user_profile.log',DB::raw("'' as mutual_friend"),'user_profile.height','users.dob','users.login_date','user_follows.isAccept'              
+            ->select('users.id',DB::raw(" concat(users.first_name,' ',users.last_name) as name "),'followBack','users.first_name','users.last_name', DB::raw("case when users.image is null then concat('".$defaultImgPath."') else concat('".$usrImgPath."',users.id,'/',users.image) end as image"),'user_profile.age','user_profile.country','user_profile.city','user_profile.lat','user_profile.log',DB::raw("'' as mutual_friend"),'user_profile.height','users.dob','users.login_date','user_follows.isAccept'              
         )
             ->addSelect(DB::raw("case when (select isAccept from user_follows as uf where followed_user_id=$loginUserId and follower_user_id=user_follows.followed_user_id limit 1) is null then '' else (select isAccept from user_follows as uf where followed_user_id=$loginUserId and follower_user_id=user_follows.followed_user_id limit 1) end as isFollow"))  
 
@@ -562,7 +646,7 @@ function getFollowerList($userId){
  // print_r(DB::getQueryLog());
  // exit ;
     $followerListback =DB::table('user_follows')
-            ->select('users.id',DB::raw(" concat(users.first_name,' ',users.last_name) as name "),'followBack','users.first_name','users.last_name', DB::raw("case when users.image is null then concat('".$defaultImgPath."') else concat('".$usrImgPath."',users.image) end as image"),'user_profile.age','user_profile.country','user_profile.city','user_profile.lat','user_profile.log',DB::raw("'' as mutual_friend"),'user_profile.height','users.dob','users.login_date',                
+            ->select('users.id',DB::raw(" concat(users.first_name,' ',users.last_name) as name "),'followBack','users.first_name','users.last_name', DB::raw("case when users.image is null then concat('".$defaultImgPath."') else concat('".$usrImgPath."',users.id,'/',users.image) end as image"),'user_profile.age','user_profile.country','user_profile.city','user_profile.lat','user_profile.log',DB::raw("'' as mutual_friend"),'user_profile.height','users.dob','users.login_date',                
         )      
        ->addSelect(DB::raw("(select isAccept from user_follows as uf where followed_user_id=$loginUserId and follower_user_id=user_follows.followed_user_id limit 1) as isFollow"))  
         ->join('users','users.id','=','user_follows.follower_user_id')       
@@ -584,12 +668,17 @@ function getFollowerList($userId){
 
 function getFollowing($userId){
      $data=session()->get('user_session');
-   $usrImgPath=url('/').'/storage/app/public/user_image/' ;
+
+     $s3BaseURL = config('constants.s3_baseURL');
+     $usrImg = config('constants.user_profile_img_s3');             
+     $usrImgPath=$s3BaseURL.$usrImg ;
+
+   //$usrImgPath=url('/').'/storage/app/public/user_image/' ;
    $defaultImgPath=url('/').'/storage/app/public/user_image/user.png';
    $loginUserId=$data['userId'] ;
 
    $followingList_ = DB::table('user_follows')
-            ->select('users.id',DB::raw(" concat(users.first_name,' ',users.last_name) as name "),'followBack','users.first_name','users.last_name', DB::raw("case when users.image is null then concat('".$defaultImgPath."') else concat('".$usrImgPath."',users.image) end as image"),'user_profile.age','user_profile.country','user_profile.city','user_profile.lat','user_profile.log',DB::raw("'' as mutual_friend"),'user_profile.height','users.dob','users.login_date'                    
+            ->select('users.id',DB::raw(" concat(users.first_name,' ',users.last_name) as name "),'followBack','users.first_name','users.last_name', DB::raw("case when users.image is null then concat('".$defaultImgPath."') else concat('".$usrImgPath."',users.id,'/',users.image) end as image"),'user_profile.age','user_profile.country','user_profile.city','user_profile.lat','user_profile.log',DB::raw("'' as mutual_friend"),'user_profile.height','users.dob','users.login_date'                    
         )  ->addSelect(DB::raw("case when (select isAccept from user_follows as uf where followed_user_id=$loginUserId and follower_user_id=user_follows.follower_user_id limit 1) is null then '' else (select isAccept from user_follows as uf where followed_user_id=$loginUserId and follower_user_id=user_follows.follower_user_id limit 1) end as isFollow"))             
             ->join('users','users.id','=','user_follows.follower_user_id')
             ->leftjoin('user_profile','user_profile.user_id','=','users.id') 
@@ -598,7 +687,7 @@ function getFollowing($userId){
             ->where('users.id','!=',$userId)->get()->toArray();  
 
     $followingListback = DB::table('user_follows')
-            ->select('users.id',DB::raw(" concat(users.first_name,' ',users.last_name) as name "),'followBack','users.first_name','users.last_name', DB::raw("case when users.image is null then concat('".$defaultImgPath."') else concat('".$usrImgPath."',users.image) end as image"),'user_profile.age','user_profile.country','user_profile.city','user_profile.lat','user_profile.log',DB::raw("'' as mutual_friend"),'user_profile.height','users.dob','users.login_date'                    
+            ->select('users.id',DB::raw(" concat(users.first_name,' ',users.last_name) as name "),'followBack','users.first_name','users.last_name', DB::raw("case when users.image is null then concat('".$defaultImgPath."') else concat('".$usrImgPath."',users.id,'/',users.image) end as image"),'user_profile.age','user_profile.country','user_profile.city','user_profile.lat','user_profile.log',DB::raw("'' as mutual_friend"),'user_profile.height','users.dob','users.login_date'                    
         )   ->addSelect(DB::raw("case when (select isAccept from user_follows as uf where followed_user_id=user_follows.followed_user_id and follower_user_id=$loginUserId limit 1) is null then '' else (select isAccept from user_follows as uf where followed_user_id=user_follows.followed_user_id and follower_user_id=$loginUserId limit 1) end as isFollow"))              
             ->join('users','users.id','=','user_follows.followed_user_id')
             ->leftjoin('user_profile','user_profile.user_id','=','users.id') 
@@ -634,14 +723,19 @@ function checkIsFriendOrNot($loginUserId,$otherUserId){
 
 function aboutInfo($userId){
 
-    $usrImgPath=url('/').'/storage/app/public/user_image/' ;
+    //$usrImgPath=url('/').'/storage/app/public/user_image/' ;
     $defaultImgPath=url('/').'/storage/app/public/user_image/user.png';
 
-    $usrBannerImage=url('/').'/storage/app/public/banner_image/' ;
+    //$usrBannerImage=url('/').'/storage/app/public/banner_image/' ;
     $usrDefaultBannerImg = url('/').'/storage/app/public/user_image/banner_defualt.jpg';
 
+    $s3BaseURL = config('constants.s3_baseURL');  
+    $userProflieImg = config('constants.user_profile_img_s3');
+    $usrImgPath=$s3BaseURL.$userProflieImg ;
+    $usrBannerImage=$usrImgPath ;
+
     $users = DB::table('users')
-            ->select('users.id',DB::raw(" concat(users.first_name,' ',users.last_name) as name"),'users.first_name','users.last_name',DB::raw("case when users.image is null then concat('".$defaultImgPath."') else concat('".$usrImgPath."',image) end as image"),'users.email','users.dob','users.status','user_profile.gender','user_profile.age','user_profile.country','user_profile.city','user_profile.relationship','user_profile.height','user_profile.weight','user_profile.smoking','user_profile.marital_status','user_profile.know','user_profile.interests','user_profile.eye_color','user_profile.looking_man_for','user_profile.self_des','user_profile.lat','user_profile.log','hip_size','know','bust','hair_style','hair_color','waist',DB::raw(" case when banner_image is null then concat('".$usrDefaultBannerImg."') else concat('".$usrBannerImage."',banner_image) end as banner_image"),'isPrivate','instagram','youtube','snapchat','users.phone','address_line_1','address_line_2','zip_code','brand_name','brand_website','isSocialPrivacy','isDOBPrivacy','isMNPrivacy','isEmailIdPrivacy','isAddressPrivacy',DB::raw(" case when isPrivate=1 then 'Private' else 'Public' end as isPrivate_"),'isPrivate')
+            ->select('users.id',DB::raw(" concat(users.first_name,' ',users.last_name) as name"),'users.first_name','users.last_name',DB::raw("case when users.image is null then concat('".$defaultImgPath."') else concat('".$usrImgPath."',users.id,'/',image) end as image"),'users.email','users.dob','users.status','user_profile.gender','user_profile.age','user_profile.country','user_profile.city','user_profile.relationship','user_profile.height','user_profile.weight','user_profile.smoking','user_profile.marital_status','user_profile.know','user_profile.interests','user_profile.eye_color','user_profile.looking_man_for','user_profile.self_des','user_profile.lat','user_profile.log','hip_size','know','bust','hair_style','hair_color','waist',DB::raw(" case when banner_image is null then concat('".$usrDefaultBannerImg."') else concat('".$usrBannerImage."',users.id,'/',banner_image) end as banner_image"),'isPrivate','instagram','youtube','snapchat','users.phone','address_line_1','address_line_2','zip_code','brand_name','brand_website','isSocialPrivacy','isDOBPrivacy','isMNPrivacy','isEmailIdPrivacy','isAddressPrivacy',DB::raw(" case when isPrivate=1 then 'Private' else 'Public' end as isPrivate_"),'isPrivate')
             ->leftjoin('user_profile','user_profile.user_id','=','users.id')
             ->where('users.id','=',$userId)
             ->first();       
@@ -666,12 +760,15 @@ function peopleYouMayKnow($type=0){
   }
  
   $data=session()->get('user_session');
-   $usrImgPath=url('/').'/storage/app/public/user_image/' ;
+  $s3BaseURL = config('constants.s3_baseURL');
+  $usrImg = config('constants.user_profile_img_s3');
+   //$usrImgPath=url('/').'/storage/app/public/user_image/' ;
+    $usrImgPath=$s3BaseURL.$usrImg ;
           $defaultImgPath=url('/').'/storage/app/public/user_image/user.png';
           //DB::enableQueryLog();
           $loginUserId = $data['userId'] ;
           $peopleYouMayKnow = DB::table('users')
-            ->select('users.id',DB::raw(" concat(users.first_name,' ',users.last_name) as name "),'users.first_name','users.last_name', DB::raw("case when users.image is null then concat('".$defaultImgPath."') else concat('".$usrImgPath."',users.image) end as image"),'user_profile.age','user_profile.country','user_profile.city','user_profile.lat','user_profile.log',DB::raw("'' as mutual_friend")              
+            ->select('users.id',DB::raw(" concat(users.first_name,' ',users.last_name) as name "),'users.first_name','users.last_name', DB::raw("case when users.image is null then concat('".$defaultImgPath."') else concat('".$usrImgPath."',users.id,'/',users.image) end as image"),'user_profile.age','user_profile.country','user_profile.city','user_profile.lat','user_profile.log',DB::raw("'' as mutual_friend")              
         )->addSelect(DB::raw("(select case when isAccept=0 then 1 else 2 end  from user_follows where (followed_user_id=".$loginUserId." and follower_user_id=users.id) or (followed_user_id=users.id and follower_user_id=".$loginUserId.")  limit 1) as is_follow"))
             ->addSelect(DB::raw("(select count(id) from user_follows where followed_user_id=users.id  and follower_user_id=".$loginUserId." and isAccept=0 limit 1) as isInvition"))
             ->leftjoin('user_profile','user_profile.user_id','=','users.id') 
@@ -730,4 +827,126 @@ function profileAboutInfo($id){
          return array('users'=>$array['users'],'country'=>$country);
         
 }
+
+function getImageHeight($imagePath){
+    $imageSize = getimagesize($imagePath);
+    $width=isset($imageSize[0])?$imageSize[0]:0;
+    $height=isset($imageSize[1])?$imageSize[1]:0;
+     if($width > 0 && $height > 0){
+       $scale = $width / $height ;
+
+    $newWidth=1024 ;
+
+    $newHeight=$newWidth / $scale ;
+
+    return $newHeight ;
+  }else{
+    return null ;
+  }
+
+}
+
+function logUrl($imgUrl){
+  $insertArray=array(
+          'request'=>$imgUrl
+        );
+
+        DB::table('log')->insert($insertArray);
+}
+
+
+  function sendContactUsEmail(Array $data){   
+        
+
+      $data = array(
+        'name' => $data['name'],
+        'email' => $data['email'],
+        'mobile_number'=> $data['mobile_number'],
+        'enquiryType'=> $data['enquiryType'] ,
+        'message_text'=>$data['message_text']
+      );
+
+
+         Mail::send('emails.contactusEmail', $data, function($message) use ($data) {
+            $contactus_email = config('constants.contactus_email');
+          $to=$contactus_email ; //"amit.shukla@intigate.in" ;  
+          $recieverName = "Amit Shukla" ;
+          $subject = 'Contact Us' ;
+          $message->to($to,$recieverName)->subject($subject);
+                    
+        });
+        if (Mail::failures()) {
+          return true ;
+         }else{
+          return true ;
+         }
+   }
+
+  function chatMessageNotification(){
+      $data=session()->get('user_session');
+      $friendList=getFriendListUserId($data['userId']);
+
+       
+        $unfriendUser=DB::table("messages")->where("from",$data['userId'])->groupby("to")->get()->pluck('to')->toArray();
+        $unfriendUser_=DB::table("messages")->where("to",$data['userId'])->groupby("from")->get()->pluck('from')->toArray();
+        $chatUser=array_unique(array_merge($unfriendUser,$unfriendUser_,$friendList));        
+
+        $users = DB::table("users")->select(DB::raw("count(is_read) as unread "))->leftjoin("messages",function($join){
+            $join->on('users.id','=','messages.from')->where('is_read',0)->where('messages.to',Auth::id());
+        })->where('users.id','!=',Auth::id())
+        ->whereIn('users.id',$chatUser)->orderby('is_read','Desc')
+        ->groupBy('is_read')->first();     
+
+        return isset($users->unread)?$users->unread:0 ;
+
+  }
+
+  function groupUnreadMessge(){
+      $data=session()->get('user_session');
+      $userId=$data['userId'] ;
+       $groupList = DB::select("select sum(unread) as unread from (select (select count(*) from group_messages where group_id=groups.id and user_id=group_participants.user_id
+            and is_read = 0) as unread from `groups` inner JOIN  group_participants ON groups.id = group_participants.group_id 
+        where group_participants.user_id=".$userId."
+        and group_participants.isBlock = 0
+        group by groups.id, groups.group_name) as g");  
+
+      return isset($groupList[0]->unread)?$groupList[0]->unread:0 ;
+    
+  }
+
+  function userProfileImgPath(){      
+      $s3BaseURL = config('constants.s3_baseURL');
+      $user_profile_img_s3 = config('constants.user_profile_img_s3');
+
+      return $s3BaseURL.$user_profile_img_s3 ;
+  }
+
+    function postImgPath(){      
+      $s3BaseURL = config('constants.s3_baseURL');
+      $user_post_s3 = config('constants.user_post_s3');
+
+      return $s3BaseURL.$user_post_s3 ;
+  }
+  
+   function eventImgPath(){      
+      $s3BaseURL = config('constants.s3_baseURL');
+      $event_image = config('constants.event_image');
+
+      return $s3BaseURL.$event_image ;
+  }
+
+  function goodiesImgPath(){      
+      $s3BaseURL = config('constants.s3_baseURL');
+      $goodies_image = config('constants.goodies_image');
+
+      return $s3BaseURL.$goodies_image ;
+  }
+
+   function storiesImgPath(){      
+      $s3BaseURL = config('constants.s3_baseURL');
+      $user_stories_s3 = config('constants.user_stories_s3');
+
+      return $s3BaseURL.$user_stories_s3 ;
+  }
+
 ?>

@@ -17,9 +17,9 @@
                             <label for="status">Status</label>
                             <select name="" id="comment_status_" class="form-control">
                                 <option value="">Select</option>
-                                <option value="1">Following</option>
+                                <option value="1">Approved</option>
                                 <option value="0">Pending</option>
-                                <option value="2">Unfollow</option>
+                                
                             </select>
                         </div>
                         <div class="d-flex">
@@ -71,6 +71,10 @@
       columnDefs: [  
             {
                 "aTargets": [0],
+                "visible":false
+            },
+             {
+                "aTargets": [4],
                 "visible":false
             },
             {

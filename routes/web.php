@@ -31,9 +31,27 @@ use App\Http\Controllers\website\PrivacyController;
  /* ****************Website Contoller ********************** */
 
 Route::get('/',[WebsiteController::class,'index'])->name('/');  
-
 Route::get('/movePostImage',[PrivacyController::class,'movePostImage']); 
+Route::get('/goodiesDetails/{id}',[WebsiteController::class,'goodiesDetails']);
+
+
+
+/* S3 storage route*/
+Route::get('/moveFileToS3Storage',[PrivacyController::class,'moveImgServerToS3Storage']);
 Route::get('/createImageAndVideoThumb',[PrivacyController::class,'createImageAndVideoThumb']);
+
+Route::get('/moveStoryImg',[PrivacyController::class,'moveStoryImgServerToS3Storage']);
+Route::get('/moveUserImg',[PrivacyController::class,'moveUserImageServerToS3Storage']);
+Route::get('/moveEventImg',[PrivacyController::class,'moveEventImageServerToS3Storage']);
+Route::get('/moveGoodiesImg',[PrivacyController::class,'moveGoodiesImageServerToS3Storage']);
+Route::get('/moveGroupImg',[PrivacyController::class,'moveGroupImageServerToS3Storage']);
+
+Route::get('/moveGroupChatImg',[PrivacyController::class,'moveGroupChatImageServerToS3Storage']);
+Route::get('/moveChatImg',[PrivacyController::class,'moveChatImageServerToS3Storage']);
+Route::get('/moveUserIImg',[PrivacyController::class,'moveUserIssueImageServerToS3Storage']);
+/* end */
+
+
 Route::get('/postDetail/{id}',[PrivacyController::class,'postDetail']);
 Route::post('/save_comment',[WebsiteController::class,'save_comment']);  
 Route::get('resetPassword/{encryption}',[WebsiteController::class,'resetPassword']); 
@@ -44,12 +62,26 @@ Route::post('/do_login',[WebsiteController::class,'login']);
 Route::post('/forgot_password',[WebsiteController::class,'forgot_password']);  
 //::get('/about_us',[WebsiteController::class,'about_us']);
 Route::post('/Signup',[WebsiteController::class,'Signup']);
+Route::post('/updateCountrySession',[WebsiteController::class,'updateCountrySession']);
 //Route::get('/group',[WebsiteController::class,'group']); 
 Route::get('/eventDetails/{id}',[WebsiteController::class,'eventDetails']);
 
 Route::group(['middleware'=>['CheckUserLogin','PreventBackChatHistory']],function(){
 
+Route::get('/privacyPolicy',[PrivacyController::class,'privacyPolicy']); 
+Route::get('/termCondition',[PrivacyController::class,'termCondition']); 
+Route::get('/aboutus',[PrivacyController::class,'aboutus']); 
+Route::get('/eventPolicies',[PrivacyController::class,'eventPolicies']);
+Route::get('/eventTermsServices',[PrivacyController::class,'eventTermsServices']);
+Route::get('/membershipsGuidlines',[PrivacyController::class,'membershipsGuidlines']);
+/***/
 
+
+
+
+
+Route::get('/contactus',[PrivacyController::class,'contactus']);
+Route::post('/saveContactus',[PrivacyController::class,'saveContactus']);
 
 Route::get('/message/{userId?}',[MessageController::class,'index']); 
 Route::post('/ajax_conversation/{userId}',[MessageController::class,'getMessage']); 
@@ -58,6 +90,7 @@ Route::post('/loadmore_message/{userId}',[MessageController::class,'loadmore_mes
 
 Route::get('/group',[GroupController::class,'index']);
 Route::post('/createGroup',[GroupController::class,'createGroup']);
+Route::post('/updateGroup',[GroupController::class,'updateGroup']);
 Route::post('/update_groupImage',[GroupController::class,'update_groupImage']);
 Route::post('/groupManageMember/{groupId}',[GroupController::class,'groupManageMember']);
 Route::post('/groupManageMemberModal/{groupId}',[GroupController::class,'groupManageMemberModal']);
@@ -87,7 +120,7 @@ Route::match(['GET', 'POST'],'/filterGoodies',[WebsiteController::class,'filterG
 /* get city -  -*/
 Route::post('/getCity',[WebsiteController::class,'getCity']);
 Route::post('/getEventCityFront',[WebsiteController::class,'getEventCity']);
-Route::post('/updateCountrySession',[WebsiteController::class,'updateCountrySession']);
+
 Route::get('/logout',[WebsiteController::class,'logout']);
 Route::post('/save_post',[WebsiteController::class,'save_post']);
 Route::post('/follow',[WebsiteController::class,'follow']);
@@ -101,7 +134,7 @@ Route::post('/event_delete/{id}',[WebsiteController::class,'event_delete']);
 Route::post('/profile_image_upload',[WebsiteController::class,'profile_image_upload']); 
 Route::post('/banner_upload',[WebsiteController::class,'banner_upload']);
 Route::post('/stories_upload',[WebsiteController::class,'stories_upload']); 
-
+//
 Route::post('/ajax_comment',[WebsiteController::class,'ajax_comment']);  
 Route::post('/story_comment',[PrivacyController::class,'story_comment']);  
 Route::post('/story_like',[PrivacyController::class,'story_like']);  
@@ -147,7 +180,7 @@ Route::post('/savePostPrivacy',[PrivacyController::class,'savePostPrivacy']);
 
 
 
-
+/**/
 Route::post('/reply_comment_delete/{id}',[WebsiteController::class,'reply_comment_delete']);
 Route::post('/goodies_save_comment',[WebsiteController::class,'goodies_save_comment']);
 Route::post('/save_goodies_reply_comment',[WebsiteController::class,'save_goodies_reply_comment']);
@@ -175,6 +208,13 @@ Route::post('/ajax_myvideo/{id}',[WebsiteController::class,'ajax_myvideo']);
 Route::post('/myvedio/{id}',[WebsiteController::class,'myvedio']); 
 Route::post('/myevent/{id}',[WebsiteController::class,'myevent']); 
 
+Route::post('/ajax_myevent/{id}',[WebsiteController::class,'ajax_myevent']); 
+Route::post('/ajax_mygoodies/{id}',[WebsiteController::class,'ajax_mygoodies']); 
+
+
+
+Route::post('/cancelEvent',[PrivacyController::class,'cancelEvent']); 
+
 Route::get('/following_page/{id}/{type?}',[WebsiteController::class,'following_page']); 
 
 Route::post('/story_like_model/{id}',[WebsiteController::class,'story_like_model']);
@@ -186,8 +226,8 @@ Route::post('/goodies_like_listing/{id}',[WebsiteController::class,'goodies_like
 Route::post('/goodies_like_model/{id}',[WebsiteController::class,'goodies_like_model']);
 Route::post('/event_like_model/{id}',[WebsiteController::class,'event_like_model']); 
 Route::post('/event_like_listing/{id}',[WebsiteController::class,'event_like_listing']);    
-///
-Route::get('/goodiesDetails/{id}',[WebsiteController::class,'goodiesDetails']);
+////
+
 Route::post('/save_booking',[WebsiteController::class,'save_booking']);
 Route::post('/notification_list/{id}',[WebsiteController::class,'notification_list']);
 Route::post('/read_notification/{id}',[WebsiteController::class,'read_notification']);  
@@ -226,12 +266,14 @@ Route::post('/goodies_like/{id}',[WebsiteController::class,'goodies_like']);
 
   /** ****************Admin Controller  ********************** */
 Route::get('/administrator',[AdministratorController::class,'login']);
+Route::post('/administrator/home',[AdministratorController::class,'home']);
 Route::post('/administrator/do_login',[AdministratorController::class,'do_login']);
 Route::get('/administrator/logout',[AdministratorController::class,'logout']);
 
 Route::get('/administrator/dashboard',[DashboardController::class,'index']);
 Route::post('/dashboard',[DashboardController::class,'admin_dashboard']);
 Route::post('/bookingYearlyChart',[DashboardController::class,'bookingYearlyChart']);
+Route::post('/bookingGoodiesChart',[DashboardController::class,'bookingGoodiesChart']);
 
 // 	/* Customer management */
 Route::post('/customerManagement',[CustomerController::class,'index']);
@@ -241,10 +283,16 @@ Route::post('/userDetailData',[CustomerController::class,'userDetailData']);
 Route::get('/userFollower_datatable/{userId}/{type}',[CustomerController::class,'userFollower_datatable']);
 Route::get('/userFollows_datatable/{userId}/{type}',[CustomerController::class,'userFollows_datatable']);
 
+
+Route::post('/deleteAdmin_myphoto',[CustomerController::class,'delete_myphoto']);
+Route::post('/deleteAdminVideo',[CustomerController::class,'deleteVideo']);
+
 // Route::post('/customerDetail',[CustomerController::class,'detail']);
 Route::post('/delete_customer',[CustomerController::class,'delete_customer']);
 Route::post('/changePassword',[CustomerController::class,'changePassword']);
 Route::post('/changeAdminPassword',[CustomerController::class,'changeAdminPassword']);
+Route::post('/changeAdminUserPassword',[CustomerController::class,'changeAdminUserPassword']);
+
 Route::post('/forgot_password12',[CustomerController::class,'forgot_password12']);
 Route::post('/otp_verify',[CustomerController::class,'verifyOTP']);
 Route::post('/customer_detail',[CustomerController::class,'customer_detail']);
@@ -257,6 +305,8 @@ Route::post('/saveUser',[AdminusersController::class,'saveUser']);
 Route::post('/user_detail',[AdminusersController::class,'user_detail']);
 Route::post('/delete_admin_user',[AdminusersController::class,'delete_admin_user']);
 Route::post('/changeadminUsrStatus',[AdminusersController::class,'changeadminUsrStatus']); 
+Route::post('/edit_admin_user',[AdminusersController::class,'edit_admin_user']);
+Route::post('/update_admin_user',[AdminusersController::class,'update_admin_user']); 
 
 
 /* Role Managment    */ 
@@ -272,7 +322,7 @@ Route::post('/editRole/{id}',[RoleController::class,'edit_role']);
 Route::post('/updateRole',[RoleController::class,'update_role']); 
 Route::post('/addRole',[RoleController::class,'add_role']);      
 
-/* Event  Controller */
+/*- Event  Controller */
 Route::post('/event_list',[EventController::class,'event_list']);
 Route::get('/event_datatable',[EventController::class,'event_datatable']);
 Route::post('/editEvent',[EventController::class,'editEvent']); 
@@ -374,10 +424,19 @@ Route::post('/update_descrption',[SignupController::class,'update_descrption']);
 Route::post('/change_password',[SignupController::class,'change_password']); 
 Route::post('/update_password',[SignupController::class,'update_password']);
 Route::post('/add_event',[SignupController::class,'add_event']);
-Route::get('/get_lat_long',[SignupController::class,'get_lat_long']);    
+Route::get('/get_lat_long',[SignupController::class,'get_lat_long']);   
   
 //One to one chat
+Route::get('/clear', function() {
 
+   Artisan::call('cache:clear');
+   Artisan::call('config:clear');
+   Artisan::call('config:cache');
+   Artisan::call('view:clear');
+
+   return "Cleared!";
+
+});
 
 Route::fallback(function () {
       return redirect()->route('/');  

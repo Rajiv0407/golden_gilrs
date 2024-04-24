@@ -40,10 +40,14 @@
 		<div class="head">
 			<h3></h3>
 		</div>
-			
+
+		<?php if($data['requestId']==0 || $loingUserId==$data['requestId']){ ?> 
+				
 		<div class="filter_mind" onClick="mobilepost();">
 			<label for="" class="form-control">What's on you  mind?</label>			
 		</div>
+
+		<?php } ?>
 
 		<?php if($data['requestId']==0 || $loingUserId==$data['requestId']){ ?>
 
@@ -152,7 +156,7 @@
 						</div>
 					</div>
 
-					<?php if ($post_infos['post_user_id'] == $post_infos['session_user_id']) { ?>
+					<?php if ($post_infos['post_user_id'] == $data['loginUserId']) { ?>
 					<div class="nav-item dropdown">
 						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
 							data-bs-toggle="dropdown" aria-expanded="false"><i class="ri-more-2-line"></i></a>
@@ -164,7 +168,7 @@
 
 						</ul>
 					</div>
-					<?php } ?>
+					<?php } ?> 
 				</div>
 				<div class="description_post">
 					<p>
@@ -176,12 +180,15 @@
 				<?php if (count($post_infos['post_image'])  > 0) { ?>
 
 				<?php if (count($post_infos['post_image']) == 1) { ?>
-				<?php foreach ($post_infos['post_image'] as $image) { ?>
+				<?php foreach ($post_infos['post_image'] as $image) { 
+						
+					?>
 				<div class="single_imgvideo" onclick="model_data(<?php echo $post_infos['id']; ?>);">
 					<?php if ($image->file_type == 'image') { ?>
 					<div class="post_box" id="banner_image_<?php echo $post_infos['id']; ?>"
 						style="background:url('<?php echo $image->image; ?>');">
-						<img class="media_img" src="<?php echo $image->thumbnail; ?>" alt="">
+						 <img class="media_img" src="<?php echo $image->thumbnail; ?>" alt="">
+						
 					</div>
 					<?php } else { ?>
 					<div class="single_video" id="banner_image_<?php echo $post_infos['id']; ?>">
@@ -194,11 +201,11 @@
 				<?php }
 			} else if (count($post_infos['post_image']) == 2) { ?>
 				<div class="dubl_imgvdo" >
-					<?php foreach ($post_infos['post_image'] as $image) { //print_r($image['image']);die; 
+					<?php foreach ($post_infos['post_image'] as $image) { //
 										?>
 					<?php if ($image->file_type == 'image') { ?>
 					<div class="post_box" id="banner_image_<?php echo $image->id; ?>" onclick="model_data(<?php echo $post_infos['id']; ?>,<?php echo $image->id ?>);">
-						<img class="media_img" src="<?php echo $image->thumbnail; ?>" alt="">
+						<img class="media_img" src="<?php echo $image->thumbnail ; ?>" alt="">
 					</div>
 					<?php } else { ?>
 					<div class="post_video" id="banner_image_<?php echo $image->id; ?>" onclick="model_data(<?php echo $post_infos['id']; ?>,<?php echo $image->id ?>);">
@@ -212,7 +219,9 @@
 				</div>
 				<?php } else if (count($post_infos['post_image']) == 3) { ?>
 				<div class="multypl_post">
-					<?php foreach ($post_infos['post_image'] as $image) { ?>
+					<?php foreach ($post_infos['post_image'] as $image) { 
+
+						?>
 					<?php if ($image->file_type == 'image') { ?>
 					<div class="post_box" id="banner_image_<?php echo $post_infos['id']; ?>"
 						onclick="model_data(<?php echo $post_infos['id']; ?>,<?php echo $image->id ; ?>);">
@@ -231,7 +240,8 @@
 				<?php } else if (count($post_infos['post_image']) > 3) { ?>
 				<div class="morefore" >
 					<?php $i = 0 ?>
-					<?php foreach ($post_infos['post_image'] as $image) { ?>
+					<?php foreach ($post_infos['post_image'] as $image) { 					
+						?>
 					<?php if ($i < 3) { ?>
 					<?php if ($image->file_type == 'image') { ?>
 					<div class="post_box" id="banner_image_<?php echo $post_infos['id']; ?>" onclick="model_data(<?php echo $post_infos['id']; ?>,<?php echo $image->id; ?>);">
@@ -652,18 +662,31 @@ $pivacyImg=array(
 				for (i = 0; i < filesAmount; i++) {
 					const file = input.files[i];
 					const fileType = file.type.split('/')[0];
+					const fileType_ = file.type.split('/')[1];					
 
 					var reader = new FileReader();
 					this.enabled = false;
 					reader.onload = (function (e) {
+						 if(fileType_=='quicktime'){
+					 	var d=e.target.result;
+					 	var t=d.split(";");
+					 	var t1='data:video/mp4;'+t[1] ;
+					 	
+					 }else{
+					 	var t1=e.target.result;
+					 
+					 }
+
 						var span = document.createElement('span');
 						if (fileType === 'image') {
 							span.innerHTML = ['<img id="test" class="thumb" src="', e.target.result, '" title="', escape(e.name), '"/><span id=' + file.name + ' class="remove_img_preview"></span>'].join('');
 							document.getElementById('output_image').insertBefore(span, null);
 							$('#view_imgvideo').show();
 						} else if (fileType === 'video') {
-							span.innerHTML = ['<video  id="test" class="thumb" src="', e.target.result, '" title="', escape(e.name), '"></video><span id=' +file.name + ' class="remove_img_preview media-video"></span>'].join('');
+							
+							span.innerHTML = ['<video  type="video/mp4" id="test" class="thumb" src="', t1, '" title="', escape(e.name), '"></video><span id=' +file.name + ' class="remove_img_preview media-video"></span>'].join('');
 							document.getElementById('output_image').insertBefore(span, null);
+							
 							$('#view_imgvideo').show();
 						}else{
 							alert('Only accept image and video type file');
@@ -858,6 +881,7 @@ $pivacyImg=array(
 		}
 
 	}
+
 
 	function save_reply_comment(id, post_id) {
 		var reply_comment = $('#reply_coment_id_' + id).val();

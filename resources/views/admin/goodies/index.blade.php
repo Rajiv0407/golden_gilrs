@@ -154,7 +154,7 @@
 				
 				<div class="form modal-form">
                     <div class="form-group">
-                        <label for="goodies_seats">Goodies Seats</label>
+                        <label for="goodies_seats">Quantity</label>
                          <input type="number" name="goodies_seats" id="goodies_seats"  class="form-control" placeholder="Goodies Seats">
                          <span id="err_goodies_seats" class="err" style="color:red"></span>
                     </div>
@@ -194,7 +194,7 @@
 				<div class="form modal-form">
                     <div class="form-group">  
                         <label for="goodies_image">Goodies Image</label>
-                         <input type="file" name="goodies_image" id="goodies_image"  class="form-control" placeholder="Goodies Image">
+                         <input type="file" name="goodies_image" id="goodies_image"  class="form-control" placeholder="Goodies Image" accept="image/*">
                          <span id="err_goodies_image" class="err" style="color:red"></span>
                     </div>
                 </div>
@@ -313,19 +313,23 @@ $('#goodies_country').change(function(e) {
                             "mRender" : function(data, type, full){
 
                                 // data-bs-toggle="modal" data-bs-target="#edit_body"
-								if(edit_goodies_per == 1 && delete_goodies_per==1){
+								if(edit_goodies_per == 1){
 									var edit='<div class="align-items-center d-flex"> <div class="more_n"> <i class="bi bi-three-dots-vertical" type="button" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false"></i> <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink"> <li><a class="dropdown-item" href="javascript:void(0);"  onclick="editGoodies('+full["id"]+')" >Edit</a></li></ul> </div> <div style="text-align: right;"> <label class="switch">';
                   // <li><a class="dropdown-item" href="javascript:void(0);" onclick="ConfirmDelete('+full['id']+')" >Delete</a></li> 
+                  // && delete_goodies_per==1
 								 }
 								 
-								 else if(edit_goodies_per == 1){
-									var edit='<div class="align-items-center d-flex"> <div class="more_n"> <i class="bi bi-three-dots-vertical" type="button" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false"></i> <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink"> <li><a class="dropdown-item" href="javascript:void(0);"  onclick="editGoodies('+full["id"]+')" >Edit</a></li> </ul> </div> <div style="text-align: right;"> <label class="switch">';
-								 }
-								 else if(delete_goodies_per == 1){
-									var edit='<div class="align-items-center d-flex"> <div class="more_n"> <i class="bi bi-three-dots-vertical" type="button" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false"></i> <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink"> </ul> </div> <div style="text-align: right;"> <label class="switch">';
-								 }else{
+								 // else if(edit_goodies_per == 1){
+									// var edit='<div class="align-items-center d-flex"> <div class="more_n"> <i class="bi bi-three-dots-vertical" type="button" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false"></i> <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink"> <li><a class="dropdown-item" href="javascript:void(0);"  onclick="editGoodies('+full["id"]+')" >Edit</a></li> </ul> </div> <div style="text-align: right;"> <label class="switch">';
+								 // }
+								 // else if(delete_goodies_per == 1){
+									// var edit='<div class="align-items-center d-flex"> <div class="more_n"> <i class="bi bi-three-dots-vertical" type="button" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false"></i> <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink"> </ul> </div> <div style="text-align: right;"> <label class="switch">';
+								 // }
+
+                 else{
 									 var edit='<div style="text-align: right;"> <label class="switch">';
 								 }
+                 
                  // <li><a class="dropdown-item" href="javascript:void(0);" onclick="ConfirmDelete('+full['id']+')" >Delete</a></li> 
 
                                 var action = edit;      
@@ -432,7 +436,7 @@ $('#goodies_country').change(function(e) {
 		}else if(goodies_address==''){
 			$('#err_goodies_address').html('Please enter goodies address');  
 		}else if(goodies_seats==''){
-			$('#err_goodies_seats').html('Please enter goodies seats');  
+			$('#err_goodies_seats').html('Please enter quantity');  
 		}else if(start_date==''){
 			$('#err_start_date').html('Please select start date');
 		}else if(end_date==''){
@@ -528,7 +532,7 @@ $('#goodies_country').change(function(e) {
 		}else if(edit_goodies_address==''){
 			$('#err_edit_goodies_address').html('Please enter address');
 		}else if(edit_goodies_seats==''){
-			$('#err_edit_goodies_seats').html('Please enter seats');
+			$('#err_edit_goodies_seats').html('Please enter quantity');
 		}else if(edit_goodies_start_date==''){
 			$('#err_goodies_start_date').html('Please select start date');
 		}else if(edit_goodies_end_date==''){

@@ -50,17 +50,29 @@ function handleFileSelect2(event) {
 			 
             const file = input.files[i];
             const fileType = file.type.split('/')[0];
+            const fileType_ = file.type.split('/')[1];      
+            
             var reader = new FileReader();
             this.enabled = false;
             reader.onload = (function (e) {
                 var span = document.createElement('span');
+                 if(fileType_=='quicktime'){
+                        var d=e.target.result;
+                        var t=d.split(";");
+                        var t1='data:video/mp4;'+t[1] ;
+                        
+                     }else{
+                        var t1=e.target.result;
+                     
+                     }
+
                 if (fileType === 'image') {
 			span.innerHTML = ['<img id="test" class="thumb" src="', e.target.result, '" title="', escape(e.name), '"/><span id='+j+'  class="remove_img_preview"></span>'].join('');
                     document.getElementById('output_image2').insertBefore(span, null);
                     $('#view_imgvideo2').show();
                     // controls
                 } else if (fileType === 'video') {
-                    span.innerHTML = ['<video  id="test" class="thumb" src="', e.target.result, '" title="', escape(e.name), '"></video><span class="remove_img_preview"></span>'].join('');
+                    span.innerHTML = ['<video  id="test" class="thumb" src="', t1, '" title="', escape(e.name), '"></video><span class="remove_img_preview"></span>'].join('');
                     document.getElementById('output_image2').insertBefore(span, null);
                     $('#view_imgvideo2').show();
                 }

@@ -7,7 +7,7 @@
        $country=$abouInfo['country'] ;
     // echo "<pre>";
     // print_r($abouInfo);
-    // exit ;
+    // exit ;//
 
 
 ?>
@@ -302,7 +302,7 @@
             <?php } ?>
         </div>
 
-        <div class="group_form threeclm">
+        <div class="group_form threeclm socialList">
             <?php if(!empty($users['instagram'])){ ?>
             <div class="fgwi">
                 <div class="icon">
@@ -377,7 +377,7 @@
         </div>
 
 
-        <div class="group_form threeclm">
+        <div class="group_form threeclm socialList">
             <?php if(!empty($users['instagram'])){ ?>
             <div class="fgwi">
                 <div class="icon">
@@ -469,7 +469,7 @@
                         }
                         ?>
                     </h4>
-                    <label>Birthday</label>
+                    <label>Birthday </label>
                      
                     <button type="button" class="btn pstpblc" data-bs-toggle="modal" data-bs-target="#audience_modal"  onclick="profilePrivacy(5)">
                         <span class="icon">
@@ -847,7 +847,8 @@
                         <div class="form-group">
                             <label for="">Birthday</label>
                             <input type="date" name="dob" id="dob" value="<?php echo  !empty($users['dob'])? date("Y-m-d", strtotime($users['dob'])):"";?>" class="form-control" placeholder="Enter
-                            BirthDay" readonly>
+                            BirthDay" >
+                             <span id="err_dob" class="err" style="color:red"></span>
                         </div>
                         <div class="form-group">
                             <label for="">Languages</label>
@@ -1082,12 +1083,39 @@ function saveUserProfilePrivacy($type){
         }
 
     }
+
+
+      function ageRestriction(date){
+      var dob=date.split('-');
+      
+      var day = parseInt(dob[2]);
+      var month = parseInt(dob[1]);
+      var year = parseInt(dob[0]);
+      var age = 18;
+
+     
+      var setDate = new Date(year + age, month - 1, day);
+      var currdate = new Date();
+
+      if (currdate >= setDate) {
+       
+        return true ;
+      } else {
+       
+        return false ;
+      }
+
+   }
+
+
     function updateBasicProfile() {
         ajaxCsrf();
         var gender = $('#basic_gender').val();
         var know = $('#know').val();
         var dob = $('#dob').val();
         var user_id = '<?php echo $data['userId']; ?>';
+         var cehckAge = ageRestriction(dob);
+
         //alert(user_id);
         $('.err').html('');
         if (gender == '') {
@@ -1096,6 +1124,8 @@ function saveUserProfilePrivacy($type){
             $('#err_know').html('Please enter languages');
         } else if (dob == '') {
             $('#err_dob').html('Please select Date of birth');
+        } else if (!cehckAge) {
+          $('#err_dob').html('Age must be greater than or equal to 18');
         } else {
             var formData = new FormData($('#profile_basic_info')[0]);
             $.ajax({

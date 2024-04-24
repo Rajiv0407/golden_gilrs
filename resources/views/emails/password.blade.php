@@ -17,8 +17,8 @@
                                 <div style="text-align: center;">
                                 
                                 <div style="background: #3d3935;padding: 10px 20px;">
-                                   <a  href="javascript:void(0);">
-                                  <img src="https://goldengirls.intigate.co.in/public/website/images/logo.png?v=<?php echo time(); ?>" alt="logo" style="width:280px;">       
+                                   <a  href="<?php echo URL('/') ; ?>" style="display: block;line-height: normal;">
+                                  <img src="<?php echo URL('/'); ?>/public/website/images/logo_new.png?v=<?php echo time(); ?>" alt="logo" >       
                                  </a>
                                 </div>
                                 <table style="font-family:'roboto';width: 100%;     margin-top: 20px;padding: 20px;">

@@ -30,6 +30,7 @@
           </h3>
           </div>
           </a>
+          <?php /* ?>
           <!-- <h4><span>
               <svg xmlns="http://www.w3.org/2000/svg" width="11.143" height="14.045" viewBox="0 0 11.143 14.045">
                 <g id="Icon_feather-clock" data-name="Icon feather-clock" transform="translate(0.5 0.5)">
@@ -45,6 +46,7 @@
             </span><span> -->
               <?php //echo dateTimeFormat($maches_friends->login_date); ?> 
             <!-- </span></h4> -->
+            <?php */ ?>
       </div>
       <?php } ?>
     </div>

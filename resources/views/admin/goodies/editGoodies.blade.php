@@ -51,7 +51,7 @@
 	</div>
 	<div class="form modal-form">  
         <div class="form-group">
-            <label for="edit_goodies_seats">Goodies Seats</label>
+            <label for="edit_goodies_seats">Quantity</label>
              <input type="text" name="edit_goodies_seats" id="edit_goodies_seats"  value="<?php echo isset($eventInfo->goodies_seats)?$eventInfo->goodies_seats:'' ; ?>" class="form-control" placeholder="Goodies Seats">
              <span id="err_edit_goodies_seats" class="err" style="color:red"></span>
         </div>
@@ -92,7 +92,7 @@
 		<div class="form modal-form">
                     <div class="form-group">  
                         <label for="edit_goodies_image">Goodies Image</label>
-                         <input type="file" name="edit_goodies_image" id="edit_goodies_image" value="<?php !empty($eventInfo->image) ? $eventInfo->image:""; ?>"  class="form-control" placeholder="Goodies Image">
+                         <input type="file" name="edit_goodies_image" id="edit_goodies_image" value="<?php !empty($eventInfo->image) ? $eventInfo->image:""; ?>"  class="form-control" placeholder="Goodies Image" accept="image/*">
                     </div>
          </div>
 		<div class="form modal-form">  

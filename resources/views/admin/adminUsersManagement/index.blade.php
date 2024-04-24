@@ -1,3 +1,11 @@
+<?php $session_data=session()->get('admin_session');
+ $user_per_info=user_permission($session_data['userId']);          
+ $AddGoodiesManagment=checkAddRole($user_per_info,2);  
+ $EditGoodiesManagment=checkEditRole($user_per_info,2);   
+ $DeleteGoodiesManagment=checkDeleteRole($user_per_info,2); 
+ $StatusGoodiesManagment=checkStatusRole($user_per_info,2); 
+ 
+ ?> 
 	<div class="carManagement__wrapper">
                 <div class="breadcrumbWrapper d-flex align-items-center justify-content-between"  >
                     <nav aria-label="breadcrumb">
@@ -7,10 +15,12 @@
                             <li class="breadcrumb-item active" aria-current="page">Admin Users Management</li>
                         </ol>
                     </nav>
+                      <?php if($AddGoodiesManagment==1){ ?> 
 					<div class="rightButton d-flex">
                         <a href="javascript:void(0);" onclick="showModal('add_users')" class="border-btn d-flax" ><i class="bi bi-plus"></i><span>Add Users</span></a>
 						 <a style="margin-left:15px;" href="{{URL::to('/')}}/administrator/dashboard#role" onclick="roleManagment();" class="border-btn d-flax" ><i class="bi bi-plus"></i><span>Manage Role</span></a>
                     </div> 
+                <?php } ?>
                     					
                 </div>
 				  
@@ -34,7 +44,7 @@
                             <select name="cust_user_type" id="cust_user_type" class="form-control">
                                 <option value="">Select</option>
                                 <?php foreach($role_type as $role_types){ ?>
-								<option value="<?php echo $role_types['id']; ?>"><?php echo $role_types['title']; ?></option>
+								<option value="<?php echo $role_types['title']; ?>"><?php echo $role_types['title']; ?></option>
 								<?php } ?> 
                             </select>
                         </div>
@@ -201,16 +211,57 @@
                 </div>
             </div>
             <div class="modal-body">
-               
+            <form action="javascript:void(0);" method="post" class="form-control" id="changePassword_"> 
+                
+                <div class="form modal-form">
+                    <div class="form-group">
+                        <label for="">New Password</label>
+                        <input type="hidden" name="changeUserPwd" id="changeUserPwd" value="">
+                        <input type="password" placeholder="Enter New Password" id="newPassword" name="newPassword" class="form-control">
+                        <span class="err" id="err_newPassword"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="">Confirm Password</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Enter Confirm Password" class="form-control">
+                         <span class="err" id="err_confirmPwd"></span>
+                    </div>
+                </div>
+                 <div class="mt-4">
+                <a href="javascript:void(0);" onclick="updateChangePwd()" class="search-btn">Update</a>
+                <a href="javascript:void(0);" class="search-btn clear-btn" data-bs-dismiss="modal" onclick="cancelChangePwd()" >Cancel</a>
+            </div>
+        </form>
             </div>
            
         </div>
     </div>
 </div>
 
+<div class="modal fade right_side" id="edit_users" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-slideout add_motification_modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Edit Users</h5>
+                <div class="cross-btn">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            
+            <div class="modal-body" id="editAdminUser">
+                
+            </div>
+        </div>
+    </div>
+</div>
 <script type="text/javascript">
      $(document).ready(function($k){
         datatablePagination($k); 
+
+        var isEdit='<?php echo $EditGoodiesManagment ; ?>' ;
+        var isDelete='<?php echo $DeleteGoodiesManagment ; ?>' ;
+        var isStatus='<?php echo $StatusGoodiesManagment ; ?>' ;
+
  $('#dataTable').DataTable({
       processing: true,
       serverSide: true,
@@ -246,16 +297,36 @@
                   {
                     "aTargets": [7],
                      "mRender": function(data, type, full){
-                        var response ='<td><div class="align-items-center d-flex"> <div class="more_n"> <i class="bi bi-three-dots-vertical" type="button" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false"></i> <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink"> <li><a class="dropdown-item" href="javascript:void(0);" onclick="ConfirmDelete('+full['id']+')">Delete</a></li> <li><a class="dropdown-item" href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#change_pass" onclick="changePassword('+full["id"]+')">Change Password</a></li><li><a class="dropdown-item" href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#edit_admin_user" onclick="editAdminUser('+full["id"]+')">Edit</a></li> </ul> </div> ' ;
-						response+='<td><div style="text-align: right;"><label class="switch">'
-						if(full['status']=='1'){  
+                        var response ='<td>';
+                        if(isEdit || isDelete){
+                            response +='<div class="align-items-center d-flex"> <div class="more_n"> <i class="bi bi-three-dots-vertical" type="button" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false"></i> <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">' ;
+                        }
+                        
+                        if(isEdit==1){
+                            response +='<li><a class="dropdown-item" href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#change_pass" onclick="changePassword('+full["id"]+')">Change Password</a></li><li><a class="dropdown-item" href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#edit_users" onclick="editAdminUser('+full["id"]+')">Edit</a></li>' ;
+                        }
+
+                        if(isDelete==1){
+                            response +='<li><a class="dropdown-item" href="javascript:void(0);" onclick="ConfirmDelete('+full['id']+')">Delete</a></li>' ;
+                        }
+
+                       response+='</ul> </div> ' ;
+
+						response+='<td>'  ;
+
+                        if(isStatus==1){
+                            response +='<div style="text-align: right;"><label class="switch">' ;
+                            if(full['status']=='1'){  
                              response +='<input type="checkbox" onclick="changeUsrStatus('+full['id']+')" checked>' ;
                          
-                        }else{
-                             response +='<input type="checkbox" onclick="changeUsrStatus('+full['id']+')" >' ;
-                             
+                            }else{
+                                 response +='<input type="checkbox" onclick="changeUsrStatus('+full['id']+')" >' ;
+                                 
+                            }
+                             response +='<span class="slider"></span> </label> </div>' ;
                         }
-                        response+='<span class="slider"></span> </label> </div></td>'  ;
+						
+                        response+='</td>'  ;
 
                         return response ;
                     }
@@ -287,8 +358,30 @@
 <script type="text/javascript">
 
  function editAdminUser(id){
-	 
+
+	 $('#edit_users').modal('show');
+                  ajaxCsrf();
+        $.ajax({
+        type:"POST",
+        url:baseUrl+'/edit_admin_user',
+        data:{"id":id},        
+        beforeSend:function()
+        {
+             ajax_before();
+        },
+        success:function(res)
+        {
+
+             ajax_success() ;
+             $('#editAdminUser').html(res);
+
+        }
+
+        });
+
  }
+
+
  function addUsers(){
          ajaxCsrf();
         var user_role=$('#user_role').val();
@@ -410,7 +503,7 @@ function resetSearchForm(){
         var cmobile=$("#cus_mobile").val();
 		var cuser_type=$("#cust_user_type").val();
 		var ccategory=$("#cust_category").val();
-     alert(ccategory);
+
 	 if(cName){
           $('#dataTable').DataTable().column(1).search(cName).draw();
     }
@@ -483,13 +576,14 @@ function ConfirmDelete(id) {
             $('#err_confirmPwd').html('both password must be matched') ;
         }else{
 
-               var formData = $('#changePassword_').val() ;
-
+             
+                 var formData=$('#changePassword_').serialize();
+ 
                  ajaxCsrf();
 
         $.ajax({
             type:"POST",
-            url:baseUrl+'/changePassword',
+            url:baseUrl+'/changeAdminPassword',
             data:formData,
             dataType:'json',
             beforeSend:function()
@@ -503,8 +597,8 @@ function ConfirmDelete(id) {
 
             if(res.status==1){
            // $('.modal-backdrop').hide();      
-           // $('#changePassword_')[0].reset();
-            //$('#change_pass').modal('hide');
+            $('#changePassword_')[0].reset();
+            $('#change_pass').modal('hide');
            // $('#dataTable').DataTable().ajax.reload();                
               statusMesage('password updated successfully','success');
             }else{
@@ -518,6 +612,7 @@ function ConfirmDelete(id) {
 
 function changePassword(userId){
     $('#changeUserPwd').val(userId);
+
 }
  function cancelChangePwd(){
 
@@ -525,4 +620,70 @@ function changePassword(userId){
 
 
  }
+
+
+  function cancelUpdateUser(){    
+     $('#edit_users').modal('hide');
+ }
+
+ function updateUsers(){
+
+         ajaxCsrf();
+        var user_role=$('#edit_user_role').val();
+        var category=$('#edit_category').val();
+        var first_name=$('#edit_name').val();
+        var last_name=$('#edit_last_name').val();
+        // var email=$('#email1').val();
+        var user_status=$('#edit_status').val();
+        var mobile_number=$('#edit_mobile_number').val();
+       
+        // var regex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+        $('.err').html('');
+        /* if(!regex.test(email)){  
+         $('#err_email').html('Please enter valid email');  
+        }  */ 
+        if(first_name==''){
+            $('#err_edit_name').html('Please enter first name');
+        }else if(last_name==''){
+            $('#err_edit_last_name').html('Please enter last name');
+        }else if(user_role==''){
+          $('#err_edit_user_role').html('Please select role.');
+        }else if(category==''){
+          $('#err_edit_category').html('Please select category.');
+        }else if(user_status==''){
+            $('#err_edit_user_status').html('Please select status');  
+        }else if(mobile_number==''){
+            $('#err_edit_mobile_number').html('Please enter mobile number');
+        }else {
+        
+            var formData=new FormData($('#editUserForm')[0]);
+              $.ajax({
+                type: "POST",
+                url: baseUrl + '/update_admin_user',  
+                data:formData ,
+                dataType:'json',
+                cache:false,
+                contentType:false,
+                processData:false,
+                beforeSend: function () {
+                       ajax_before();
+                },
+                success: function(html){
+                 ajax_success() ;
+                    if(html.status==1){
+                       $('#edit_users').modal('hide');
+                        $('.modal-backdrop').remove();    
+                         removeModelOpen();
+                        $('#dataTable').DataTable().ajax.reload();
+                          statusMesage('Save successfully','success');
+                      }else{
+                          statusMesage(html.message,'error');
+                      }
+                
+                        }
+                    });   
+
+        }
+    }
+
  </script>  

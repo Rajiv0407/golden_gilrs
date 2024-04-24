@@ -728,133 +728,133 @@ function postListingPrivacy(postId){
   		$('#signupForm').hide();  
   });
 
- function loginUser(){
+//  function loginUser(){
     
-  var usrEmail=$('#user_email').val();
-  var usrPassword = $('#user_password').val();
+//   var usrEmail=$('#user_email').val();
+//   var usrPassword = $('#user_password').val();
 
-	$('.err').text('');
+// 	$('.err').text('');
 
-	if(usrEmail==''){
-		$('#err_user_email').text('Please enter email');
-	}else if(usrPassword==''){	
-		$('#err_user_password').text('Please enter password');
-	}else{
+// 	if(usrEmail==''){
+// 		$('#err_user_email').text('Please enter email');
+// 	}else if(usrPassword==''){	
+// 		$('#err_user_password').text('Please enter password');
+// 	}else{
 		
-		 $('#loader_spineer').show(); 
+// 		 $('#loader_spineer').show(); 
 		
-		    var formData = $('#login_form').serialize(); //new 
+// 		    var formData = $('#login_form').serialize(); //new 
 
-		ajaxCsrf();
-        $.ajax({
-          type: "post",
-          url: baseUrl + '/do_login',
-          data: formData,
-          beforeSend: function() {
+// 		ajaxCsrf();
+//         $.ajax({
+//           type: "post",
+//           url: baseUrl + '/do_login',
+//           data: formData,
+//           beforeSend: function() {
           
-          },
-          success: function(res) {
+//           },
+//           success: function(res) {
            
-               $('#loader_spineer').hide();
+//                $('#loader_spineer').hide();
                  
-               if(res==1){
-               	$('#login_succ').show();
-               	$('#login_post').modal('hide');
+//                if(res==1){
+//                	$('#login_succ').show();
+//                	$('#login_post').modal('hide');
                	
-               	 location.reload();
-               }else if(res==="2"){
-               	$('#err_login_form').text('Invalid Credentials.');
-               }else{
-               	 $('#err_login_form').text('Something went wrong');
-               }
-             // 
+//                	 location.reload();
+//                }else if(res==="2"){
+//                	$('#err_login_form').text('Invalid Credentials.');
+//                }else{
+//                	 $('#err_login_form').text('Something went wrong');
+//                }
+//              // 
            	
-           	setTimeout(function(){
-           			$('#login_succ').hide();
-           		$('#err_login_form').text('');
-           	},2000);
-          }
+//            	setTimeout(function(){
+//            			$('#login_succ').hide();
+//            		$('#err_login_form').text('');
+//            	},2000);
+//           }
 
-        });
+//         });
 
-	}
-  }
+// 	}
+//   }
 
-  function usrSignup(){
+//   function usrSignup(){
 
-     var firstName = $('#first_name').val();
-     var last_name = $('#last_name').val();
-     var signup_emal = $('#signup_emal').val();
-     var usr_mobileNo = $('#usr_mobileNo').val();
-     var usr_dob = $('#usr_dob').val();
-     var usr_nationality = $('#usr_nationality').val();
-     var signup_password = $('#signup_password').val();
-     $('.err').text('');
-     if(firstName==''){
-     	$('#err_first_name').text('Please enter first name.');
-     }else if(last_name==''){
-     	$('#err_last_name').text('Please enter last name.');
-     }else if(signup_emal==''){
-     	$('#err_signup_emal').text('Please enter email.');
-     }else if(!validateEmail(signup_emal)){
-     	$('#err_signup_emal').text('Please enter valid email.');
-     }else if(usr_mobileNo==''){
-     	$('#err_usr_mobileNo').text('Please enter mobile number.');
-     } else if (usr_mobileNo.length < 8) {
-        $('#err_usr_mobileNo').html('Please enter minimum 8 digits');
-      } else if (usr_mobileNo.length > 14) {
-        $('#err_usr_mobileNo').html('Please enter maximum 14 digits');
-      }else if(usr_dob==''){	
-     	$('#err_usr_dob').text('Pleas select Date of birth');
-     }else if(usr_nationality==''){
-     	$('#err_usr_nationality').text('Please enter nationality');
-     }else if(signup_password==''){
-     	$('#err_signup_password').text('Please enter password');
-     }else if (signup_password.length < 8) {
-        $('#err_signup_password').html('Please enter maximum 8 characters');
-      } else{
+//      var firstName = $('#first_name').val();
+//      var last_name = $('#last_name').val();
+//      var signup_emal = $('#signup_emal').val();
+//      var usr_mobileNo = $('#usr_mobileNo').val();
+//      var usr_dob = $('#usr_dob').val();
+//      var usr_nationality = $('#usr_nationality').val();
+//      var signup_password = $('#signup_password').val();
+//      $('.err').text('');
+//      if(firstName==''){
+//      	$('#err_first_name').text('Please enter first name.');
+//      }else if(last_name==''){
+//      	$('#err_last_name').text('Please enter last name.');
+//      }else if(signup_emal==''){
+//      	$('#err_signup_emal').text('Please enter email.');
+//      }else if(!validateEmail(signup_emal)){
+//      	$('#err_signup_emal').text('Please enter valid email.');
+//      }else if(usr_mobileNo==''){
+//      	$('#err_usr_mobileNo').text('Please enter mobile number.');
+//      } else if (usr_mobileNo.length < 8) {
+//         $('#err_usr_mobileNo').html('Please enter minimum 8 digits');
+//       } else if (usr_mobileNo.length > 14) {
+//         $('#err_usr_mobileNo').html('Please enter maximum 14 digits');
+//       }else if(usr_dob==''){	
+//      	$('#err_usr_dob').text('Pleas select Date of birth');
+//      }else if(usr_nationality==''){
+//      	$('#err_usr_nationality').text('Please enter nationality');
+//      }else if(signup_password==''){
+//      	$('#err_signup_password').text('Please enter password');
+//      }else if (signup_password.length < 8) {
+//         $('#err_signup_password').html('Please enter maximum 8 characters');
+//       } else{
 
-     	 $('#loader_spineer').show();
+//      	 $('#loader_spineer').show();
        
   
-         var formData = new FormData($('#usrRegisterForm')[0]);
+//          var formData = new FormData($('#usrRegisterForm')[0]);
 
-        ajaxCsrf();
-        $.ajax({
-          type: "post",
-          url: baseUrl + '/Signup',
-          data: formData,
-          contentType: false,
-          processData: false,
-          dataType: 'json',    
-          beforeSend: function() {
-          },
-          success: function(res) {
-            if(res.status == 1) {           
-              $('#usrRegisterForm')[0].reset();
-              	$('#signup_succ').show();
-               	$('#login_post').modal('hide');
+//         ajaxCsrf();
+//         $.ajax({
+//           type: "post",
+//           url: baseUrl + '/Signup',
+//           data: formData,
+//           contentType: false,
+//           processData: false,
+//           dataType: 'json',    
+//           beforeSend: function() {
+//           },
+//           success: function(res) {
+//             if(res.status == 1) {           
+//               $('#usrRegisterForm')[0].reset();
+//               	$('#signup_succ').show();
+//                	$('#login_post').modal('hide');
                	
-               	 location.reload();
+//                	 location.reload();
              
-            } else if (res.status == 2) {
-              $('#loader_spineer').hide();
-              $('#err_signup_emal').html('Email id already Registered');
-            } else {
-              $('#loader_spineer').hide();
-              $('#err_signup_form').text('Something went wrong');
-            }
-          }
+//             } else if (res.status == 2) {
+//               $('#loader_spineer').hide();
+//               $('#err_signup_emal').html('Email id already Registered');
+//             } else {
+//               $('#loader_spineer').hide();
+//               $('#err_signup_form').text('Something went wrong');
+//             }
+//           }
 
-        });
-     }
+//         });
+//      }
 
-  }
+//   }
 
-function validateEmail($email) {
-  var emailReg = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/;
-  return emailReg.test( $email );
-}
+// function validateEmail($email) {
+//   var emailReg = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/;
+//   return emailReg.test( $email );
+// }
 
     var telInput = $(".tel_input")
     // initialise plugin
@@ -874,51 +874,51 @@ function validateEmail($email) {
     });
 
 
- function forgot_password() {
-      var email = $('#forgot_email').val();
-      $('.err').html('');
-      if (email == '') {
-        $('#error_forgot_email').html('Please enter email');
-      }else if(!validateEmail(email)){
-     	$('#error_forgot_email').text('Please enter valid email.');
-     } else {
-     	 $('#loader_spineer').show();
-        var formData = $('#forgotPasswordForm').serialize();
-        ajaxCsrf();
-        $.ajax({
-          type: "post",
-          url: baseUrl + '/forgot_password',
-          data: formData,
-          beforeSend: function() {
-            $('#floadingGife').show();
-            //ajax_before();
-          },
-          success: function(res) {
- 			$('#loader_spineer').hide();
-            // ajax_success() ;
-            if (res == 2) {
+ // function forgot_password() {
+ //      var email = $('#forgot_email').val();
+ //      $('.err').html('');
+ //      if (email == '') {
+ //        $('#error_forgot_email').html('Please enter email');
+ //      }else if(!validateEmail(email)){
+ //     	$('#error_forgot_email').text('Please enter valid email.');
+ //     } else {
+ //     	 $('#loader_spineer').show();
+ //        var formData = $('#forgotPasswordForm').serialize();
+ //        ajaxCsrf();
+ //        $.ajax({
+ //          type: "post",
+ //          url: baseUrl + '/forgot_password',
+ //          data: formData,
+ //          beforeSend: function() {
+ //            $('#floadingGife').show();
+ //            //ajax_before();
+ //          },
+ //          success: function(res) {
+ // 			$('#loader_spineer').hide();
+ //            // ajax_success() ;
+ //            if (res == 2) {
              
-              $('#forgot_email').val("");
-              $("#forgot_user_name_password").html("Email has been sent on your registerd email id");
+ //              $('#forgot_email').val("");
+ //              $("#forgot_user_name_password").html("Email has been sent on your registerd email id");
 
-            } else if (res == 3) {
+ //            } else if (res == 3) {
              
-              $("#error_forgot_email").html("This email id not register with us");
+ //              $("#error_forgot_email").html("This email id not register with us");
 
-            } else {
-               $("#err_forgot_user_name_password").html("Something went wrong.");
-            }
+ //            } else {
+ //               $("#err_forgot_user_name_password").html("Something went wrong.");
+ //            }
 
-            setTimeout(function(){
-            	$("#err_forgot_user_name_password").html("");
-            	 $("#error_forgot_email").html("");
-            	 $("#forgot_user_name_password").html("");
-            },2000);
-          }
+ //            setTimeout(function(){
+ //            	$("#err_forgot_user_name_password").html("");
+ //            	 $("#error_forgot_email").html("");
+ //            	 $("#forgot_user_name_password").html("");
+ //            },2000);
+ //          }
 
-        });
-      }
-    }
+ //        });
+ //      }
+ //    }
   </script>
 
 </body>

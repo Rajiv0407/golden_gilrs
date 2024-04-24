@@ -11,6 +11,20 @@
 
     <!-- Facebook Share -->
 
+  <!-- Facebook Share -->
+<meta property="og:title" content="Golden Girls" />
+<meta property="og:type" content="website" />
+<meta property="og:url"  content="<?php echo isset($data['ogurl'])?$data['ogurl']:'' ; ?>" />
+<meta property="og:image:width" content="450"/> 
+<meta property="og:image:height" content="298"/>
+
+<meta property="og:image" content="<?php echo isset($data['ogImage'])?$data['ogImage']:'' ; ?>"  />
+
+<meta property="fb:app_id" content="1186143922770318" />
+<meta property="og:description" content="<?php echo isset($data['ogdescription'])?$data['ogdescription']:'' ; ?>" />
+<meta property="og:site_name" content="">
+<meta property="og:updated_time" content="1709895566" />
+<link rel="canonical" href="<?php echo URL('/') ; ?>"> 
 
 
 
@@ -42,7 +56,10 @@
 </head>
 
 <body>
+<?php 
 
+
+$isloginOrNot = checkIsloginOrNot() ?>
 
   <?php  $mobileDeduct=isMobileDev();  ?>
   <script type="text/javascript">
@@ -62,6 +79,7 @@
       </div>
       <?php } ?>
 
+         <?php if(request()->segment(1) != 'aboutus' && request()->segment(1) != 'contactus' && request()->segment(1) !='termCondition' && request()->segment(1) != 'privacyPolicy' && request()->segment(1) != 'membershipsGuidlines' && request()->segment(1) != 'eventTermsServices' && request()->segment(1) != 'eventPolicies' && request()->segment(1) != 'termCondition' && request()->segment(1) != 'privacyPolicy'){  ?>
       <div class="user_prof ">
         <div class="left_section">
 
@@ -69,7 +87,9 @@
           <div class="sell_box">
             @include('leftmenu.onlinecontacts')
           </div>
-          <?php }else{  ?>
+          <?php }else if(request()->segment(1) != 'aboutus' && $isloginOrNot){  ?>
+            <!-- login User condition -->
+
           <div class="sell_box">
             @include('website.profile_left_bar')
           </div>
@@ -80,6 +100,8 @@
         <div class="center_menu center_menu_data">
           <?php if(request()->segment(1) != 'home'){  ?>
 
+
+            <!-- login Conditions -->
           @yield('content')
           <input type="hidden" id="tab_Id_data" value="all">
           <input type="hidden" id="goodies_Id_data" value="all">
@@ -99,22 +121,32 @@
           <div class="sell_box hide_moble_view up_story_id">@include('rightmenu.stories')</div>
           <?php } ?>
 
-
+          
           <div class="sell_box muserinfobx">@include('website.user_info')</div>
-
+     
           <?php if(request()->segment(1) != 'network') { ?>
           <div class="sell_box hide_moble_view">@include('rightmenu.follow')</div>
           <?php } ?>
-          <?php }else{  ?>
+          <?php }else if(request()->segment(1) != 'aboutus'  && $isloginOrNot){  ?>
+            <!-- with login conditions -->
           <div class="sell_box">@include('website.user_info')</div>
           <?php } ?>
         </div>
 
       </div>
+    <?php } else { ?> 
+
+       @yield('content')
+    <?php } ?>
+
     </div>
+   
     <footer class="footer_copy">
+       <?php if($isloginOrNot){ ?> 
       @include('includes.website.footer')
+         <?php } ?>
     </footer>
+ 
   </div>
 
   <!-- partial -->
@@ -189,6 +221,19 @@
       </div>
     </div>
   </div>
+
+  <div class="sucmssg_box" id="cancel_event_succ" style="display:none">
+    <div class="btm_left_box_mdl">
+      <div class="media"><i class="m_icon"></i></div>
+      <div class="data">
+        <h3>Success</h3>
+        <p>Event has been canceled Successfully!! </p>
+        <div class="dismiss crs">
+          <button mat-icon-button="" class="crs_btn"><i aria-hidden="true" class="fa fa-times"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
   <!-- Banner Upolded Success Modal End -->
 
 
@@ -229,6 +274,20 @@
       <div class="data">
         <h3>Success</h3>
         <p>Post Has Been added Successfully!! </p>
+        <div class="dismiss crs">
+          <button mat-icon-button="" class="crs_btn"><i aria-hidden="true" class="fa fa-times"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+ <!--  Contact Us -->
+  <div class="sucmssg_box" id="contactUs_succ" style="display:none">
+    <div class="btm_left_box_mdl">
+      <div class="media"><i class="m_icon"></i></div>
+      <div class="data">
+        <h3>Success</h3>
+        <p>Enquiry has submitted Successfully!! </p>
         <div class="dismiss crs">
           <button mat-icon-button="" class="crs_btn"><i aria-hidden="true" class="fa fa-times"></i></button>
         </div>
@@ -498,7 +557,7 @@
       </div>
     </div>
   </div>
-  <!--End story image delete  model-->.
+  <!--End story image delete  model-->
 
   <!-- Delete Success Modal -->
   <div class="sucmssg_box" id="story_success_delete" style="display:none">
@@ -526,6 +585,8 @@
   <script type="text/javascript" src="{{URL::to('/public/website')}}/js/intlTelInput.js"></script>
   <script type="text/javascript" src="{{URL::to('/public/website')}}/js/utils.js"></script>
   <script type="text/javascript" src="{{URL::to('/public/website')}}/js/custom.js?v={{ time() }}"></script>
+ 
+  
   <script type="text/javascript" src="{{URL::to('/public/website')}}/lib/js/config.min.js?v={{ time() }}"></script>
   <script type="text/javascript" src="{{URL::to('/public/website')}}/lib/js/util.min.js?v={{ time() }}"></script>
 

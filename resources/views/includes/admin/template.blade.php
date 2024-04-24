@@ -23,6 +23,7 @@
     <link rel="stylesheet" type="text/css" href="{{URL::to('/public/admin')}}/css/jquery.notyfy.css?v={{ time() }}">
     <link rel="stylesheet" type="text/css" href="{{URL::to('/public/admin')}}/css/notyfy.theme.default.css?v={{ time() }}">
      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css">
+    
 
     <script src="{{URL::to('/public/admin')}}/js/highcharts.js"></script>
     <script src="{{URL::to('/public/admin')}}/js/data.js"></script>
@@ -30,6 +31,7 @@
    <!--  <script src="https://code.highcharts.com/modules/exporting.js"></script> -->
     
     <script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script> 
+<link rel="stylesheet" href="https://raw.githack.com/SochavaAG/example-mycode/master/pens/1_plugins/fancybox-3.1.25/jquery.fancybox.min.css">
       </head>
 
 <body>
@@ -64,7 +66,8 @@
       <script src="{{URL::to('/public/admin')}}/js/jquery.notyfy.js?v={{ config('app.version') }}" type="text/javascript"></script>
      
         <script src="{{URL::to('/public/admin')}}/js/notyfy.init.js?v={{ config('app.version') }}" type="text/javascript"></script>
-     
+
+      <script src="https://raw.githack.com/SochavaAG/example-mycode/master/pens/1_plugins/fancybox-3.1.25/jquery.fancybox.min.js"></script>
 
          <script type="text/javascript">
                  var primaryColor = '#6fa362',

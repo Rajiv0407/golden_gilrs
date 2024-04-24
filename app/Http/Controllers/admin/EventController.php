@@ -192,15 +192,19 @@ public function createThumbnail($path, $width, $height)
          //where e.user_id='$user_id' 
         $data['title']=siteTitle();  
         $session_data=session()->get('admin_session');
-        $eventImg = config('constants.event_image');
+        //$eventImg = config('constants.event_image');
+        $goodiesImg = config('constants.event_image');
+	    $s3BaseURL = config('constants.s3_baseURL');
+	    $eventImg = $s3BaseURL.$goodiesImg;
+
 		if($session_data['userType']== 3){
 		$user_id=$session_data['userId'];
-        $carQry="select e.id,e.event_name,ety.type_name as event_type,e.address,DATE_FORMAT(e.event_date,'%d %M %Y') as event_end_date,e.event_price,DATE_FORMAT(e.event_start_date,'%Y-%m-%d') as start_date,DATE_FORMAT(e.event_end_date,'%Y-%m-%d') as end_date,case when e.status=1 then 'Active' else 'Inactive' end as status_,e.status,case when (eimg.image is null || eimg.image='') then '' else concat('".$eventImg."',eimg.image) end as image from events as e left join event_type as ety on e.event_type= ety.id left join event_images as eimg on e.id=eimg.event_id" ;       
+        $carQry="select e.id,e.event_name,ety.type_name as event_type,e.address,DATE_FORMAT(e.event_date,'%d %M %Y') as event_end_date,e.event_price,DATE_FORMAT(e.event_start_date,'%Y-%m-%d') as start_date,DATE_FORMAT(e.event_end_date,'%Y-%m-%d') as end_date,case when e.status=1 then 'Active' else 'Inactive' end as status_,e.status,case when (eimg.image is null || eimg.image='') then '' else concat('".$eventImg."',e.id,'/',eimg.image) end as image from events as e left join event_type as ety on e.event_type= ety.id left join event_images as eimg on e.id=eimg.event_id" ;       
         $carData = DB::select($carQry); 
         $tableData = Datatables::of($carData)->make(true);
 		}else{
 		$user_id=$session_data['userId'];
-        $carQry="select e.id,e.event_name,ety.type_name as event_type,e.address,DATE_FORMAT(e.event_date,'%d %M %Y') as event_end_date,e.event_price,DATE_FORMAT(e.event_start_date,'%Y-%m-%d') as start_date,DATE_FORMAT(e.event_end_date,'%Y-%m-%d') as end_date,case when e.status=1 then 'Active' else 'Inactive' end as status_,e.status,case when (eimg.image is null || eimg.image='') then '' else concat('".$eventImg."',eimg.image) end as image from events as e left join event_type as ety on e.event_type= ety.id left join event_images as eimg on e.id=eimg.event_id where e.user_id='$user_id' " ;       
+        $carQry="select e.id,e.event_name,ety.type_name as event_type,e.address,DATE_FORMAT(e.event_date,'%d %M %Y') as event_end_date,e.event_price,DATE_FORMAT(e.event_start_date,'%Y-%m-%d') as start_date,DATE_FORMAT(e.event_end_date,'%Y-%m-%d') as end_date,case when e.status=1 then 'Active' else 'Inactive' end as status_,e.status,case when (eimg.image is null || eimg.image='') then '' else concat('".$eventImg."',e.id,'/',eimg.image) end as image from events as e left join event_type as ety on e.event_type= ety.id left join event_images as eimg on e.id=eimg.event_id where e.user_id='$user_id' " ;       
         $carData = DB::select($carQry); 
         $tableData = Datatables::of($carData)->make(true);
 		}
@@ -256,8 +260,17 @@ public function createThumbnail($path, $width, $height)
 					$imgPath='/public/event_image';  
 					$image_name = md5(rand(1000, 10000));
 					$ext = strtolower($file->getClientOriginalExtension());
-					$image_full_name = $image_name . '.' . $ext;
-					$file->storeAs($imgPath,$image_full_name);
+					$image_full_name = $image_name .time().'.' . $ext;
+					//$file->storeAs($imgPath,$image_full_name);
+
+					//Store image on S3 bucket  
+					$goodiesImg = config('constants.event_image');
+			        $s3BaseURL = config('constants.s3_baseURL');
+					
+				   
+				    $file->storeAs($goodiesImg.$event_id.'/',$image_full_name,'s3Public');
+				    //echo $goodiesImg.$event_id.'/'.$image_full_name ;
+
                     $image=$image_full_name; 
 					$input=array(
 							'event_id'=>$event_id,
@@ -404,9 +417,17 @@ public function createThumbnail($path, $width, $height)
 					$imgPath='/public/event_image';  
 					$image_name = md5(rand(1000, 10000));
 					$ext = strtolower($file->getClientOriginalExtension());
-					$image_full_name = $image_name . '.' . $ext;
+					$image_full_name = $image_name .time().'.' . $ext;
 					$file->storeAs($imgPath,$image_full_name);
                     $image=$image_full_name; 
+
+                    //Store image on S3 bucket  
+					$goodiesImg = config('constants.event_image');
+			        $s3BaseURL = config('constants.s3_baseURL');
+					
+				   
+				    $file->storeAs($goodiesImg.$updateId.'/',$image_full_name,'s3Public');
+				    //echo $goodiesImg.$updateId.'/'.$image_full_name ;
 					$input=array(
 							'event_id'=>$updateId,
 							'image'=>$image,
@@ -421,7 +442,7 @@ public function createThumbnail($path, $width, $height)
         } 
 		  
          catch(\Exception $e){
-			 
+			 echo $e;
              echo errorResponse('error occurred'); 
          }         
     }

@@ -54,20 +54,75 @@ class dashboardController extends Controller
      $event['event_year']=$event_years_count;
      $event['event_month']=$event_month_count;
      $event['event_day']=$event_current_day;
+
+     $eventYear=DB::select("select Year(created_at) as year from booking_requests where booking_type=1 and status=2 group by Year(created_at)");
+
+     $goodiesYear=DB::select("select Year(created_at) as year from booking_requests where booking_type=2 and status=2 group by Year(created_at)");
+
 	 // echo "<pre>";print_r($booking);die;       
-      echo view('admin/admin_dashboard',$data)->with('booking',$booking)->with('event',$event);  
+      echo view('admin/admin_dashboard',$data)->with('booking',$booking)->with('event',$event)->with('eventYear',$eventYear)->with('goodiesYear',$goodiesYear);  
 
     }
 
-    public function bookingYearlyChart(){
-          
+    public function bookingGoodiesChart(Request $request){  
 
-    $response = array('yearly'=>[],'drilldownData'=>[]) ;
-   echo json_encode($response) ;
+    $year=isset($request->year)?$request->year:date("Y") ;
+    $data=DB::select("select count(*) as totalBooking,MONTHNAME(created_at) as monthName,month(created_at) as monthNumber from booking_requests where booking_type=2 and status=2 and Year(created_at)=".$year." group by month(created_at)");
+    $response=array();
+        $dayData=array();
+    if(!empty($data)){
+       
+        foreach ($data as $key => $value) {
+            $dayWiseData=DB::select("select count(*) as totalBooking,DAY(created_at) as DAYNAME from booking_requests where booking_type=2 and status=2 and month(created_at)=".$value->monthNumber." group by day(created_at)");
+
+            if(!empty($dayWiseData)){
+                $dayWiseData1=array();
+                foreach ($dayWiseData as $key => $value1) {
+                    $dayWiseData1[]=array($value1->DAYNAME,$value1->totalBooking);
+                }
+            }
+
+            $dayData[]=array("name"=>$value->monthName,"id"=>$value->monthName,"data"=>$dayWiseData1);
+
+          $response[]=array("name"=>$value->monthName,"y"=>$value->totalBooking,"drilldown"=>$value->monthName);
+        }
+
+    }
 
 
+    $resp=array('seriesData'=>$response,'drilldownData'=>$dayData) ;
+    echo json_encode($resp); exit ;
+ 
+
+    }
+
+    public function bookingYearlyChart(Request $request){
+     $year=isset($request->year)?$request->year:date("Y") ;
+    $data=DB::select("select count(*) as totalBooking,MONTHNAME(created_at) as monthName,month(created_at) as monthNumber from booking_requests where booking_type=1 and status=2 and Year(created_at)=".$year." group by month(created_at)");
+   
+    if(!empty($data)){
+        $response=array();
+        $dayData=array();
+        foreach ($data as $key => $value) {
+            $dayWiseData=DB::select("select count(*) as totalBooking,DAY(created_at) as DAYNAME from booking_requests where booking_type=1 and status=2 and month(created_at)=".$value->monthNumber." group by day(created_at)");
+
+            if(!empty($dayWiseData)){
+                $dayWiseData1=array();
+                foreach ($dayWiseData as $key => $value1) {
+                    $dayWiseData1[]=array($value1->DAYNAME,$value1->totalBooking);
+                }
+            }
+
+            $dayData[]=array("name"=>$value->monthName,"id"=>$value->monthName,"data"=>$dayWiseData1);
+
+          $response[]=array("name"=>$value->monthName,"y"=>$value->totalBooking,"drilldown"=>$value->monthName);
+        }
+
+    }
 
 
+    $resp=array('seriesData'=>$response,'drilldownData'=>$dayData) ;
+    echo json_encode($resp); exit ;
     
     }
 

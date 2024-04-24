@@ -70,18 +70,7 @@ class goodiesController extends Controller
 			$user_id=isset($session_data['userId'])?$session_data['userId']:'' ;
 			$date = date("Y-m-d H:i:s");
 			
-			if($request->hasFile('goodies_image')){
-                $imgPath='/public/goodies_image';       
-                $filenamewithextension = $request->file('goodies_image')->getClientOriginalName();
-                 $filename = pathinfo($filenamewithextension, PATHINFO_FILENAME);
-                 //get file extension
-                 $extension = $request->file('goodies_image')->getClientOriginalExtension();
-                 $filename=str_replace(' ', '_', $filename);
-                 $filenametostore = $filename.'_'.time().'.'.$extension;          
-                 //Upload File
-                 $request->file('goodies_image')->storeAs($imgPath,$filenametostore);
-                 
-            }   
+			
 		  
 				$insertData=array(
 				'title'=>$goodies_title ,
@@ -94,12 +83,38 @@ class goodiesController extends Controller
 				'goodies_descrption'=>$goodies_descrption ,
                 'start_date'=>$start_date,				
 				'end_date'=>$end_date ,
-				'user_id'=>$user_id ,
-				'image'=>$filenametostore,  
+				'user_id'=>$user_id ,				
                 'status'=>$goodies_status ,	   			
 				'created_at'=>$date	  
 			);      
 				$insertmember = Goodies::create($insertData);  
+				$insertId=$insertmember->id ;
+
+				if($request->hasFile('goodies_image')){
+                $imgPath='/public/goodies_image';       
+                $filenamewithextension = $request->file('goodies_image')->getClientOriginalName();
+                 $filename = pathinfo($filenamewithextension, PATHINFO_FILENAME);
+                 //get file extension
+                 $extension = $request->file('goodies_image')->getClientOriginalExtension();
+                 $filename=str_replace(' ', '_', $filename);
+                 $filenametostore = $filename.'_'.time().'.'.$extension;          
+                 //Upload File
+                 //$request->file('goodies_image')->storeAs($imgPath,$filenametostore);
+
+                 $goodiesImg = config('constants.goodies_image');
+			     $s3BaseURL = config('constants.s3_baseURL');
+					
+				$file=$request->file('goodies_image') ;
+				$file->storeAs($goodiesImg.$insertId.'/',$filenametostore,'s3Public');
+
+
+					$updateData=array('image'=>$filenametostore);
+					DB::table('goodies')->where('id',$insertId)->update($updateData);
+					 
+					
+                 //
+                 
+            }   
 				//echo "<pre>";print_r($insertmember);die;
 				
 			try{
@@ -118,14 +133,18 @@ class goodiesController extends Controller
         $data['title']=siteTitle();  
         $session_data=session()->get('admin_session');
         $user_id=$session_data['userId'];
-		$goosiesImg = config('constants.goodies_image');
+		//$goosiesImg = config('constants.goodies_image');
+		$goodiesImg = config('constants.goodies_image');
+	    $s3BaseURL = config('constants.s3_baseURL');
+	    $gImgPath=$s3BaseURL.$goodiesImg ;
+
         if($session_data['userType']== 3){
-        $goodiesQry="select id,title,goodies_address,case when goodies_fee_type=1 then 'Paid' else 'Free' end as   goodies_fee_type,goodies_descrption,goodies_seats,goodies_date,DATE_FORMAT(start_date,'%Y-%m-%d') as start_date,DATE_FORMAT(end_date,'%Y-%m-%d') as end_date,case when status=1 then 'Active' else 'Inactive' end as status_,status,DATE_FORMAT(goodies.goodies_date,'%d %M %Y') as goodies_date,case when (image is null || image='') then '' else concat('".$goosiesImg."',image) end as image from goodies where is_delete=1";            
+        $goodiesQry="select id,title,goodies_address,case when goodies_fee_type=1 then 'Paid' else 'Free' end as   goodies_fee_type,goodies_descrption,goodies_seats,goodies_date,DATE_FORMAT(start_date,'%Y-%m-%d') as start_date,DATE_FORMAT(end_date,'%Y-%m-%d') as end_date,case when status=1 then 'Active' else 'Inactive' end as status_,status,DATE_FORMAT(goodies.goodies_date,'%d %M %Y') as goodies_date,case when (image is null || image='') then '' else concat('".$gImgPath."',id,'/',image) end as image from goodies where is_delete=1";            
         $goodiesData = DB::select($goodiesQry); 
         $tableData = Datatables::of($goodiesData)->make(true);
         //echo "<pre>";print_r($tableData);die;
 		}else{
-          $goodiesQry="select id,title,goodies_address,case when goodies_fee_type=1 then 'Paid' else 'Free' end as as goodies_fee_type,goodies_descrption,goodies_seats,goodies_date,DATE_FORMAT(start_date,'%Y-%m-%d') as start_date,DATE_FORMAT(end_date,'%Y-%m-%d') as end_date,case when status=1 then 'Active' else 'Inactive' end as status_,status,DATE_FORMAT(goodies.goodies_date,'%d %M %Y') as goodies_date,case when (image is null || image='') then '' else concat('".$goosiesImg."',image) end as image from goodies where is_delete=1 and user_id='$user_id'";              
+          $goodiesQry="select id,title,goodies_address,case when goodies_fee_type=1 then 'Paid' else 'Free' end as goodies_fee_type,goodies_descrption,goodies_seats,goodies_date,DATE_FORMAT(start_date,'%Y-%m-%d') as start_date,DATE_FORMAT(end_date,'%Y-%m-%d') as end_date,case when status=1 then 'Active' else 'Inactive' end as status_,status,DATE_FORMAT(goodies.goodies_date,'%d %M %Y') as goodies_date,case when (image is null || image='') then '' else concat('".$gImgPath."',id,'/',image) end as image from goodies where is_delete=1 and user_id='$user_id'";              
         $goodiesData = DB::select($goodiesQry); 
         $tableData = Datatables::of($goodiesData)->make(true);
         //echo "<pre>";print_r($tableData);die;
@@ -253,7 +272,14 @@ class goodiesController extends Controller
                  $filename=str_replace(' ', '_', $filename);
                  $filenametostore = $filename.'_'.time().'.'.$extension;          
                  //Upload File
-                 $request->file('edit_goodies_image')->storeAs($imgPath,$filenametostore);
+                 //$request->file('edit_goodies_image')->storeAs($imgPath,$filenametostore);
+
+                $goodiesImg = config('constants.goodies_image');
+			    $s3BaseURL = config('constants.s3_baseURL');
+					
+				$file=$request->file('edit_goodies_image') ;
+				$file->storeAs($goodiesImg.$updateId.'/',$filenametostore,'s3Public');
+
                  $updateData['image']=$filenametostore ;
             }			
 		  

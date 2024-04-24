@@ -21,7 +21,7 @@
         content: "×";
     }
 </style>
-<!--  -->
+<!--  --->
 
 
 <div class="chat_write_messenger">
@@ -34,17 +34,14 @@
                    
                         <div class="mg_user_group">
                             <div class="mg_user_img">
-                   <label for="edit_groupimg" class="add_img">
+                   <label for="editt_groupimg" class="add_img"   <?php if($group->admin_id==Auth::id()){ ?>  data-bs-toggle="modal" data-bs-target="#updategroupmodal" <?php } ?> >
                                 <?php if ($group->image != '') { ?>
                                     <img id="group_icon" src="{{$group->image }}" alt="">
                                 <?php } else { ?>
                                     <img id="group_icon" src="{{ URL('/').'/public/user_image/group_icon.png' }}" alt="">
                                 <?php } ?>
                                 <?php if($group->admin_id==Auth::id()){ ?> 
-                            <form id="updateGroupImg" action="javascript:void(0);">
-                            <input type="hidden" name="groupId" id="groupId" value="<?php echo $group->id ; ?>">
-                        <input type="file"  id="edit_groupimg" name="edit_groupimg" class="d-none" accept="image/png, image/gif, image/jpeg" >
-                        </form>
+                           
                    <div class="edit_grp">
                         <svg viewBox="0 0 24 24" class="N5XGq UB1zOd"><path d="M20.41 4.94l-1.35-1.35c-.78-.78-2.05-.78-2.83 0L3 16.82V21h4.18L20.41 7.77c.79-.78.79-2.05 0-2.83zm-14 14.12L5 19v-1.36l9.82-9.82 1.41 1.41-9.82 9.83z"></path><path fill="none" d="M0 0h24v24H0V0z"></path></svg>
                     </div>
@@ -64,7 +61,7 @@
                                 ?>
                                 <!-- onclick="selectedUser('<?php //echo json_encode($t); ?>')" -->
                                 <!--  -->
-                                <h3>{{$group->group_name}}</h3>
+                                <h3 id="gName">{{$group->group_name}}</h3>
                                 <h4><span id="group_member"><?php echo $groupMember ; ?></span> members</h4>
                                 <!-- <p>last online 5 hours ago</p>  -->
                             </div>
@@ -150,13 +147,26 @@
                                 <div class="cont_bx">
                                     <?php if (!empty($message->message)) { ?>
                                         <p>{{ $message->message }}</p>
-                                    <?php } ?>
+                                    <?php } 
+                                       if(!empty($message->image) && count($message->image)==1){
+                                    $class="singaleImg" ;
+                                }else if(!empty($message->image) && count($message->image)==2){
+                                    $class="twoImg" ;
+                                }else if(!empty($message->image) && count($message->image)==3){
+                                     $class="threeImg" ;
+                                }else{
+                                    $class="moreImg" ;
+                                }
+
+                                    ?>
                                     <?php if (isset($message->image) && !empty($message->image)) {  ?>
-                                        <div class="list_media">
+                                        <div class="list_media <?php echo $class ; ?>">
                                         <?php foreach ($message->image as $image_data) {   ?>
                                             <?php if ($image_data->file_type == "image") { ?>
                                                 <div class="media_img">
+                                               <a href="<?php echo $image_data->image  ?>" data-fancybox="gallery" data-caption="">     
                                                 <img src="<?php echo $image_data->image  ?>" class="img_thmb" alt="">
+                                            </a>
                                                 </div>
                                             <?php } ?>
 
@@ -168,9 +178,11 @@
 
                                             <?php if ($image_data->file_type == "video") { ?>
                                                 <div class="media_video">
+                                                <a data-fancybox="group-1" href="<?php echo $image_data->image;  ?>">
                                                 <video width="320" height="240" controls>
                                                     <source src="<?php echo $image_data->image;  ?>">
                                                 </video>
+                                            </a>
                                                 </div>
                                             <?php } ?>
                                         <?php }  ?>
@@ -299,6 +311,60 @@ fill="#d7792d" />
     </div>
 </div>
 <!-- Update Group -->
+<div class="modal fade modal_cust" id="updategroupmodal" tabindex="-1" role="dialog" aria-bs-labelledby="exampleModalLabel" aria-bs-hidden="true">
+<div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-body">
+    <form action="javascript:void(0);" method="post" id="updateGroupImg" enctype="multipart/form-data" >
+          <div class="creatgrou_modal">
+      <h3>Update a space</h3>
+      <div class="frm_title">
+      <div class="icon_bx">
+      <label for="edit_groupimg" class="add_img">
+      <div class="upload_img">
+    <?php if ($group->image != '') { ?>
+                <img id="group_icon_update" src="{{$group->image }}" alt="">
+            <?php } else { ?>
+                <img id="group_icon_update" src="{{ URL('/').'/public/user_image/group_icon.png' }}" alt="">
+            <?php } ?>
+     <img id="blah" style="display:none;" />
+      </div>
+          <div class="plus">
+           <svg width="24px" height="24px" viewBox="0 0 24 24" class=" UB1zOd"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path><path d="M0 0h24v24H0z" fill="none"></path></svg>
+           </div>
+             <input type="hidden" name="groupId" id="groupId" value="<?php echo $group->id ; ?>">
+                        <input type="file"  id="edit_groupimg" name="edit_groupimg" class="d-none" accept="image/png, image/gif, image/jpeg" >
+        <!--  <input type="file"  id="edit_groupimg" name="edit_groupimg" class="d-none">   -->
+      </label>
+      </div>
+      <div class="frm_grp">
+      <div class="">
+      <input type="text" class="form-control" id="update_name" name="update_name" value="{{$group->group_name}}" placeholder="space name">
+      <span id="error_update_name" class="err"></span>
+    </div>
+      <!-- <div class="">
+      <textarea type="text" class="form-control" id="group_description" name="group_description" placeholder="Description (optional)" maxlength="150" data-is-auto-expanding="true" ></textarea>
+   </div> -->
+      </div><!--  -->
+              </div>    
+         
+             <span id="error_group_user" class="err"></span>
+             <div class="button-group"> 
+                 <button class="btn " id="update_group" name="update_group" onclick="updateGroup();">Update</button>
+              <button class="btn " id="cancel_group" onclick="cancelUpdateGroup();" name="cancel">Cancel</button>                
+             
+               
+            </div>
+
+      </div>
+      </form>
+    
+       
+      </div>
+     
+    </div>
+  </div>
+</div>
 <!-- End -->
 <script>
     $('#chatimg').change(handleFileSelect);
@@ -380,6 +446,11 @@ var filesToUploadFile = [] ;
 
         $(this).parent('span').remove();
         $(this).val("");
+         var chatImg=$('#chat_image').html();        
+          if(chatImg.length==1){
+             $('#chat_imgvideo').hide();
+            
+          }
     });
 
      $('#chat_image').on('click', '.remove_video_preview', function(e) {
@@ -397,6 +468,11 @@ var filesToUploadFile = [] ;
 
         $(this).parent('span').remove();
         $(this).val("");
+         var chatImg=$('#chat_image').html();        
+          if(chatImg.length==1){
+             $('#chat_imgvideo').hide();
+            
+          }
     });
 
      $('#chat_image').on('click', '.remove_application_preview', function(e) {
@@ -414,6 +490,11 @@ var filesToUploadFile = [] ;
 
         $(this).parent('span').remove();
         $(this).val("");
+         var chatImg=$('#chat_image').html();        
+          if(chatImg.length==1){
+             $('#chat_imgvideo').hide();
+            
+          }
     });
 
 
@@ -553,6 +634,10 @@ function trimfield(str)
                   var imgUrl=html.imgUrl ;
                   $('#group_icon').attr('src',imgUrl);
                   $('#add_notfi_no_img_'+groupId).attr('src',imgUrl);
+                  $('#group_icon_update').attr('src',imgUrl);
+                
+                  
+
                 }
                
             }
@@ -563,7 +648,40 @@ function trimfield(str)
 
 
 
+function updateGroup(){
+   var groupName = $('#update_name').val();
+   var groupDescription = $('#group_description').val() ;
+   var groupId = $('#groupId').val();
+ 
+    if(groupName==''){
+        $('#error_update_name').html('Please enter group name') ;
+    }
+    else {
 
+     var formData=new FormData($('#updateGroupImg')[0]);
+     var baseUrl = "{{ url('/') }}";
+    $.ajax({
+        type: "POST",
+        url: baseUrl +'/updateGroup',
+        data:formData ,
+        dataType:'json',
+        cache: 'FALSE',
+        contentType:false,
+        processData:false,
+        beforeSend: function () { 
+        },
+        success: function(html){
+             if(html.status==1){
+                $('#gName').html(groupName);
+                $('#add_notfi_no_'+groupId).html(groupName);
+                cancelUpdateGroup();
+                
+             }        
+        }
+        });      
+   
+    }
+}
 
  function ajax_message(groupId,page){  
             receiver_id = groupId;                 
@@ -610,6 +728,11 @@ function trimfield(str)
      });
  
 
+    function cancelUpdateGroup(){       
+    
+    $('#updategroupmodal').modal('hide');
+     
+}
 </script>
 
 

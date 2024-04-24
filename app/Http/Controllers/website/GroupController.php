@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers\website;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Controller;
 use App\Models\Message; 
 use App\Models\ChatImage;  
@@ -39,19 +40,34 @@ class GroupController extends Controller
         $my_id = Auth::id();
         // select channels that User Subscribe
 
-        $filePath = url('/').'/storage/app/public/group_image/thumbnail/' ;
+        $group_icon = config('constants.group_icon');
+        $userImage = config('constants.user_profile_img_s3');
+        $s3BaseURL = config('constants.s3_baseURL');
+
+        //$filePath = url('/').'/storage/app/public/group_image/thumbnail/' ;
+        $filePath = $s3BaseURL.$group_icon ;
 		$defaltImg=url('/')."/storage/app/public/group_image/";
-        $groupList = DB::select("select groups.id, groups.group_name , case when groups.thumbnail='' then concat('".$defaltImg."','group_icon.png') else concat('".$filePath."',groups.thumbnail) end as groupImg,count(group_messages.is_read) as unread
-        from `groups` inner JOIN  group_participants ON groups.id = group_participants.group_id LEFT  JOIN  group_messages ON group_participants.user_id = group_messages.user_id and is_read = 0 and group_messages.group_id=group_participants.group_id  and group_messages.from = " . Auth::id() . "
-  and group_participants.user_id = " . Auth::id() . "
+
+         $user_id=$data['userId']; 
+        $array=aboutInfo($user_id); 
+       
+        
+
+  //      LEFT  JOIN  group_messages ON group_participants.user_id = group_messages.user_id and is_read = 0 and group_messages.group_id=group_participants.group_id  and group_messages.from = " . Auth::id() . "
+  // and group_participants.user_id = " . Auth::id() . "
+
+        // ,count(group_messages.is_read) as unread
+
+        $groupList = DB::select("select groups.id, groups.group_name , case when groups.thumbnail='' then concat('".$defaltImg."','group_icon.png') else concat('".$filePath."',groups.id,'/',groups.thumbnail) end as groupImg,(select count(*) from group_messages where group_id=groups.id and user_id=group_participants.user_id
+            and is_read = 0) as unread from `groups` inner JOIN  group_participants ON groups.id = group_participants.group_id 
         where group_participants.user_id = " . Auth::id() . "
         and group_participants.isBlock = 0
         group by groups.id, groups.group_name");        
 		
-          $usrImg=url('/')."/storage/app/public/user_image/" ;
+          $usrImg=$s3BaseURL.$userImage ; //url('/')."/storage/app/public/user_image/" ;
 
         $friendList=getFriendListUserId($data['userId']);
-        $users_list = DB::table("users")->select('users.id','users.isOnline',DB::raw("case when users.image is null then concat('".$usrImg."','user_holder.svg') else  concat('".$usrImg."',users.image) end as image"),DB::raw("concat(users.first_name,' ',users.last_name) as name"),'users.email',DB::raw("count(is_read) as unread "))->leftjoin("messages",function($join){
+        $users_list = DB::table("users")->select('users.id','users.isOnline',DB::raw("case when users.image is null then concat('".$usrImg."','user_holder.svg') else  concat('".$usrImg."',users.id,'/',users.image) end as image"),DB::raw("concat(users.first_name,' ',users.last_name) as name"),'users.email',DB::raw("count(is_read) as unread "))->leftjoin("messages",function($join){
             $join->on('users.id','=','messages.from')->where('is_read',0)->where('messages.to',Auth::id());
         })->where('users.id','!=',Auth::id())
         ->whereIn('users.id',$friendList)
@@ -60,7 +76,8 @@ class GroupController extends Controller
         // $users_list = DB::select("select users.id,users.isOnline,case when users.image is null then '' else  concat('".$usrImg."',users.image) end as image, concat(users.first_name,' ',users.last_name) as name,LEFT (users.first_name, 1) as first_letter,users.email
         // from users where status=1 and is_delete =1 and id != '$my_id'"); 
 		//echo "<pre>";print_r($groupList);die;   
-         return view('website/group/index',['group_list' => $groupList,'user_list' => $users_list]);
+        $pusherKey = config('constants.PUSHER_APP_KEY'); 
+         return view('website/group/index',['users'=>$array['users'],'group_list' => $groupList,'user_list' => $users_list,'APP_KEY'=>$pusherKey]);
 
          /**/
     }
@@ -72,6 +89,17 @@ class GroupController extends Controller
         return view('group.join', compact('groupALL'));
     }
 
+    public function updateGroup(Request $request){
+          $this->validate($request, [
+            'update_name' => 'required'
+        ]);
+
+          $groupId = isset($request->groupId)?$request->groupId:0 ;
+
+          DB::table('groups')->where('id',$groupId)->update(['group_name'=>$request->update_name]);
+          return json_encode(array("status"=>1));
+    }
+
     public function createGroup(Request $request){
         // echo "<pre>";
         // print_r($_FILES['add_groupimg']);
@@ -80,12 +108,27 @@ class GroupController extends Controller
             'group_name' => 'required'
         ]);
 
+        $discription=isset($request->group_description)?$request->group_description:'' ;
          //generate a code for the groupe        
         $characters = 'abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $code = substr(str_shuffle($characters), rand(0, 9), 7).time();
         //image upload 
         $smallthumbnail='';
         $filenametostore='' ;
+        
+
+
+        // insert New Group to Table
+        $group = Group::create([
+            'group_name' => $request->group_name,
+            'code' => $code,           
+            'admin_id' => auth()->user()->id,
+            'discription'=>$discription
+        ]);
+
+        $groupId=isset($group->id)?$group->id:0 ;
+
+
         if($request->hasfile('add_groupimg')){
             $allowedfileExtension=['jpg', 'jpeg','PNG','JPEG','JPG', 'gif', 'png', 'bmp', 'svg', 'svgz', 'cgm', 'djv', 'djvu', 'ico', 'ief','jpe', 'pbm', 'pgm', 'pnm', 'ppm', 'ras', 'rgb', 'tif', 'tiff', 'wbmp', 'xbm', 'xpm', 'xwd','flv'];
          $file = $request->file('add_groupimg'); 
@@ -97,31 +140,39 @@ class GroupController extends Controller
           $check = in_array($extension,$allowedfileExtension);
           //$fileType = $this->checkFileType($filenamewithextension);
 
-              if($check){
+        
+           if($check){
 
                  $filename = pathinfo($filenamewithextension, PATHINFO_FILENAME);
                  $filename=str_replace(' ', '_', $filename);
                  $filenametostore = $filename.'_'.time().'.'.$extension;         
-                 $file->storeAs('public/group_image/', $filenametostore);
+                 //$file->storeAs('public/group_image/', $filenametostore);
                  //'image'=>$filenametostore,
                 $smallthumbnail = $filename.'_100_100_'.time().'.jpg';    
-                $file->storeAs('public/group_image/thumbnail/', $smallthumbnail);
-                $smallthumbnailpath = public_path('storage/group_image/thumbnail/'.$smallthumbnail);
-               $this->createThumbnail($smallthumbnailpath, 100, 100);
+                //$file->storeAs('public/group_image/thumbnail/', $smallthumbnail);
+                //$smallthumbnailpath = public_path('storage/group_image/thumbnail/'.$smallthumbnail);
+              // $this->createThumbnail($smallthumbnailpath, 100, 100);
+
+                $group_icon = config('constants.group_icon');
+                $s3BaseURL = config('constants.s3_baseURL');
+                $file->storeAs($group_icon.$groupId.'/',$filenametostore,'s3Public');
+
+                $img = Image::make($file->getRealPath())->orientate()->fit(1024, null, function ($constraint) {
+                        $constraint->aspectRatio();
+                        });
+
+                        
+                Storage::disk('s3')->put($group_icon.$groupId.'/'.$smallthumbnail, $img->stream()->__toString(),'public');
+
+                $updateArray=array(
+                'image' =>$filenametostore, 
+                'thumbnail'=>$smallthumbnail,
+                );
+
+               DB::table('groups')->where('id',$groupId)->update($updateArray);
              }
 
-        }
-
-
-
-        // insert New Group to Table
-        $group = Group::create([
-            'group_name' => $request->group_name,
-            'code' => $code,
-            'image' =>$filenametostore, 
-            'thumbnail'=>$smallthumbnail,
-            'admin_id' => auth()->user()->id
-        ]);
+         }
         $group->participants()->attach(auth()->user()->id);
        //  ///we attach the user with the group after he created it
         foreach ($request->groupUser as  $value) {
@@ -240,6 +291,7 @@ class GroupController extends Controller
 
         $smallthumbnail='';
         $filenametostore='' ;
+
         try{
 
 
@@ -259,18 +311,34 @@ class GroupController extends Controller
                  $filename = pathinfo($filenamewithextension, PATHINFO_FILENAME);
                  $filename=str_replace(' ', '_', $filename);
                  $filenametostore = $filename.'_'.time().'.'.$extension;         
-                 $file->storeAs('public/group_image/', $filenametostore);
+                 //$file->storeAs('public/group_image/', $filenametostore);
                  //'image'=>$filenametostore,
-                $smallthumbnail = $filename.'_100_100_'.time().'.jpg';    
-                $file->storeAs('public/group_image/thumbnail/', $smallthumbnail);
-                $smallthumbnailpath = public_path('storage/group_image/thumbnail/'.$smallthumbnail);
-               $this->createThumbnail($smallthumbnailpath, 100, 100);
+                $smallthumbnail = $filename.'_100_100_'.time().'.jpg';   
+                $group_icon = config('constants.group_icon');
+                $s3BaseURL = config('constants.s3_baseURL');
+                $file->storeAs($group_icon.$groupId.'/',$filenametostore,'s3Public');
+
+                $img = Image::make($file->getRealPath())->orientate()->fit(1024, null, function ($constraint) {
+                        $constraint->aspectRatio();
+                        });
+
+                        
+                Storage::disk('s3')->put($group_icon.$groupId.'/'.$smallthumbnail, $img->stream()->__toString(),'public');
+
+
+                //$file->storeAs('public/group_image/thumbnail/', $smallthumbnail);
+
+                
+                 $smallthumbnailpath = $s3BaseURL.$group_icon.$groupId.'/'.$smallthumbnail;
+               // $smallthumbnailpath = storage_path('app/public/group_image/thumbnail/'.$smallthumbnail);
+               //$this->createThumbnail($smallthumbnailpath, 100, 100);
+
                 $group = Group::where('id',$groupId)->update([           
                 'image' =>$filenametostore, 
                 'thumbnail'=>$smallthumbnail           
                 ]);
 
-                $imgUrl=URL('/').'/storage/app/public/group_image/thumbnail/'.$smallthumbnail ;
+                $imgUrl=$smallthumbnailpath ; //URL('/').'/storage/app/public/group_image/thumbnail/'.$smallthumbnail ;
              }else{
               $imgUrl='' ;
              }
@@ -284,7 +352,7 @@ class GroupController extends Controller
          }
        }  catch(\Exception $e)
           { 
-            //echo $e ; exit ;
+           // echo $e ; exit ;
         //echo "<pre>";print_r($user_info);die;  
            return json_encode(array("status"=>0,'imgUrl'=>''));
           }  

@@ -40,6 +40,7 @@
 $('#file-upload').change(handleFileSelect2);
 var filesToUpload = [];
 function handleFileSelect2(event) {
+	$('.err').html('');
     var input = this;
 	var j=0; 
     
@@ -50,17 +51,28 @@ function handleFileSelect2(event) {
 			 
             const file = input.files[i];
             const fileType = file.type.split('/')[0];
+            const fileType_ = file.type.split('/')[1];    
             var reader = new FileReader();
             this.enabled = false;
             reader.onload = (function (e) {
                 var span = document.createElement('span');
+                 if(fileType_=='quicktime'){
+            var d=e.target.result;
+            var t=d.split(";");
+            var t1='data:video/mp4;'+t[1] ;
+            
+           }else{
+            var t1=e.target.result;
+           
+           }
+
                 if (fileType === 'image') {
 			span.innerHTML = ['<img id="test" class="thumb" src="', e.target.result, '" title="', escape(e.name), '"/><span id='+j+'  class="remove_img_preview"></span>'].join('');
                     document.getElementById('output_image2').insertBefore(span, null);
                     $('#view_imgvideo2').show();
                     // controls
                 } else if (fileType === 'video') {
-                    span.innerHTML = ['<video  id="test" class="thumb" src="', e.target.result, '" title="', escape(e.name), '"></video><span class="remove_img_preview"></span>'].join('');
+                    span.innerHTML = ['<video  id="test" class="thumb" src="', t1, '" title="', escape(e.name), '"></video><span class="remove_img_preview"></span>'].join('');
                     document.getElementById('output_image2').insertBefore(span, null);
                     $('#view_imgvideo2').show();
                 }
@@ -74,7 +86,13 @@ function handleFileSelect2(event) {
             reader.readAsDataURL(input.files[i]);
 			
         }
+
+         for (const file of input.files) {
+				filesToUpload.push(file);
+			}
     }
+
+
 }
 
 $("#file-upload").change(function () {
@@ -104,5 +122,68 @@ $("#file-upload").change(function () {
     $(this).val(""); 
 	
 }); 
+
+ function add_story(){
+        
+        var story_des = $('#story_des').val();
+        var story_file = $('#file-upload').val();
+        var fileUploadSize = $('#file-upload')[0].files[0] ;
+        var fileSize = 25 * 1000000 ;
+      
+        $('.err').html('');
+        if(story_des==''){
+            $('#error_story_des').html('Please enter descrption') ;
+        }else if(fileUploadSize==undefined){
+           $('#error_story_file').html('Please select file') ;
+        }else if(fileUploadSize.size > fileSize){
+            alert('Please upload file less then 25 MB');
+            return false ;       
+        }else{
+      
+             $('#updateStory_loadingGife').css('display','block');
+          var formData=new FormData($('#add_stroy_form_id')[0]);
+          formData.delete('story_upload[]');
+
+          for (const file of filesToUpload) {
+                formData.append('story_upload[]', file);
+            }
+            
+          ajaxCsrf();
+          //$('#loader_spineer').show();
+            $.ajax({
+                type:"post",
+                url:baseUrl+'/stories_upload',
+                data:formData,
+                contentType:false,
+                processData:false,
+                async:true,
+                dataType:'json',
+                beforeSend: function () {
+                    
+                },
+                success:function(res)
+                {
+                    //$('#loader_spineer').hide();
+                     $('#updateStory_loadingGife').css('display','none');
+                if(res == 1){
+                    $("#add_stroy_form_id")[0].reset();
+                    $('.add_story_modal').modal('hide');
+                    //$(".up_story_id").load(location.href + " .up_story_id");
+                    /* $(".item").append("<div class='gallary_img' id='story_uploaded_ids_'"+res.id+"'><img src='"+res.file+"' alt=''><div class='cont_stories'>"+res.name+"</div>  <a class='btn' data-fancybox data-src='"+res.file+"' data-caption='"+res.name+"' href='javascript:void();'></a></div>");
+                      */
+                     $("#story_upload_succ").show();
+                     setTimeout(function() {
+                           $("#story_upload_succ").hide();
+                        }, 2000);
+                     location.reload();
+
+                }else{
+                   statusMesage('something went wrong','error');
+                }
+                }
+
+                });
+              }
+        }
 
 </script>

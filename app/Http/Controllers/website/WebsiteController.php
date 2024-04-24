@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\website\PrivacyController;
 use Illuminate\Support\Facades\Validator;
+
 use Illuminate\Support\Str;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
@@ -51,7 +52,8 @@ use Pusher\Pusher;
 use DateTime;
 use Thumbnail ;
 use VideoThumbnail ;
-
+use Illuminate\Support\Facades\Storage;
+use URL ;
 
 /////
 class WebsiteController extends Controller
@@ -64,17 +66,35 @@ class WebsiteController extends Controller
         $this->follow = new Follow;
         $this->privacyController = $privacyController;
 
+       
+
     }
     public function index(Request $request){
-
+      
+       
+       
         $data=session()->get('user_session');
         if(!empty($data)){  
+
 			return redirect('/home');   
 		}
 
-    	$url=Url('/').'/public/website/logo/flag_london.png' ;
+		//.'/public/website/logo/flag_london.png'
+
+		 $isSendMail = config('constants.isSendMail');
+		   if($isSendMail==1){
+		   	 $url=URL('/').'/public/website/logo/flag_london.png' ;
+		   	}else{
+		   		 $url='http://192.168.1.30/golden/public/website/logo/flag_london.png' ;
+		   	}
+
+    	
+ 
+
     	session()->put('defaultCountry', array('image'=>$url,'value'=>5,'name'=>'UK'));
     	
+    	
+    		
 
       if($request->hasCookie('userName') != false){
         $data['userName']=Cookie::get('userName') ;
@@ -93,6 +113,7 @@ class WebsiteController extends Controller
 
     public function resetPassword(Request $request){
     	$url=Url('/').'/public/website/logo/flag_london.png' ;
+    	
     	session()->put('defaultCountry', array('image'=>$url,'value'=>5,'name'=>'UK'));
   		$encryption=$request->encryption ; 
     	return view('/resetPassword')->with('encryption',$encryption);  
@@ -167,25 +188,37 @@ class WebsiteController extends Controller
 				$postThumb=isset($postData->thumbnail)?$postData->thumbnail:'' ;
 				$postId=isset($postData->post_id)?$postData->post_id:'' ;
 				
-				 $imgPath='app/public/post_image/'.$postId.'/'.$postFile ;
-				 $thumbPath='app/public/post_image/'.$postId.'/'.$postThumb ;
-		         $unlinkPath = storage_path($imgPath) ;
-		         $unlinkPath_ = storage_path($thumbPath) ;
-	            do_upload_unlink(array($unlinkPath,$unlinkPath_));
+				 // $imgPath='app/public/post_image/'.$postId.'/'.$postFile ;
+				 // $thumbPath='app/public/post_image/'.$postId.'/'.$postThumb ;
+		   //       $unlinkPath = storage_path($imgPath) ;
+		   //       $unlinkPath_ = storage_path($thumbPath) ;
+	    //         do_upload_unlink(array($unlinkPath,$unlinkPath_));
+
+	            $postImg = config('constants.user_post_s3');
+	            
+                \Storage::disk('s3')->delete($postImg.$postId.'/'.$postFile);
+                \Storage::disk('s3')->delete($postImg.$postId.'/'.$postThumb);
+
 				DB::table('post_images')->where('id',$deleteId)->delete();
+
 			}else if($deleteType > 0 && $deleteId > 0 && $deleteType==2){
 				$postData=DB::table("user_profile_image")->where('id',$deleteId)->first();
 				$postFile=isset($postData->image)?$postData->image:'' ;
 				$imageType=isset($postData->image_type)?$postData->image_type:'' ;
-
+				$usrId = isset($postData->userId)?$postData->userId:0 ;
+				  $usrImg = config('constants.user_profile_img_s3');
 				if($imageType==1){
-				  $imgPath='app/public/user_image/'.$postFile ;	
-				  $unlinkPath = storage_path($imgPath) ;
-				  do_upload_unlink(array($unlinkPath));			 
+				  //$imgPath='app/public/user_image/'.$postFile ;	
+				  //$unlinkPath = storage_path($imgPath) ;
+				 
+				   \Storage::disk('s3')->delete($usrImg.$usrId.'/'.$postFile);
+                
+				  //do_upload_unlink(array($unlinkPath));			 
 				}else if($imageType==2){
-				  $imgPath='app/public/banner_image/'.$postFile ;
-				  $unlinkPath = storage_path($imgPath) ;
-				  do_upload_unlink(array($unlinkPath));		
+				  //$imgPath='app/public/banner_image/'.$postFile ;
+				   \Storage::disk('s3')->delete($usrImg.$usrId.'/'.$postFile);
+				  //$unlinkPath = storage_path($imgPath) ;
+				 // do_upload_unlink(array($unlinkPath));		
 				}
 				
 				DB::table('user_profile_image')->where('id',$deleteId)->delete();
@@ -199,11 +232,13 @@ class WebsiteController extends Controller
 			$postThumb=isset($postData->thumbnail)?$postData->thumbnail:'' ;
 			$postId=isset($postData->post_id)?$postData->post_id:'' ;
 
-			 $imgPath='app/public/post_image/'.$postId.'/'.$postFile ;
-			 $thumbPath='app/public/post_image/'.$postId.'/'.$postThumb ;
-	         $unlinkPath = storage_path($imgPath) ;
-	         $unlinkPath_ = storage_path($thumbPath) ;
-	          do_upload_unlink(array($unlinkPath,$unlinkPath_));
+			 // $imgPath=postImgPath().$postId.'/'.$postFile ;
+			 // $thumbPath=postImgPath().$postId.'/'.$postThumb ;
+	   //       $unlinkPath = storage_path($imgPath) ;
+	   //       $unlinkPath_ = storage_path($thumbPath) ;
+	   //        do_upload_unlink(array($unlinkPath,$unlinkPath_));
+			$postImg = config('constants.user_post_s3');
+	           \Storage::disk('s3')->delete($postImg.$postId.'/'.$postFile);
 
 			if($deleteId > 0)
 			DB::table('post_images')->where('id',$deleteId)->delete();
@@ -222,11 +257,20 @@ class WebsiteController extends Controller
 	        $limit = $request->has('per_page') ? $request->get('per_page') :21;
 	        $offset = ($page - 1) * $limit ;
 
-	      $postImgPath=url('/').'/storage/app/public/post_image/' ;
+	      //$postImgPath=url('/').'/storage/app/public/post_image/' ;
+	       $postImgPathS3 = config('constants.user_post_s3');
+	     $s3BaseURL = config('constants.s3_baseURL');	
+	      $userProflieImg = config('constants.user_profile_img_s3');	
+         
+         $postImgPath=$s3BaseURL.$postImgPathS3 ;	
 	      $loginUserId=$data['userId'];
-	      $profileCoverImgPath=url('/').'/storage/app/public/banner_image/' ;
-	      $profileImgPath=url('/').'/storage/app/public/user_image/' ;
-		  $usrPCImg=DB::table('user_profile_image')->select('id',DB::raw("case when image_type=2 then concat('".$profileCoverImgPath."',image) else concat('".$profileImgPath."',image) end as image"),DB::raw("'image' as image_type"),DB::raw(" 2 as deleteType"))->where('userId',$user_id)
+
+	      //$profileCoverImgPath=url('/').'/storage/app/public/banner_image/' ;
+	     // $profileImgPath=url('/').'/storage/app/public/user_image/' ;
+
+	      $profileCoverImgPath=$s3BaseURL.$userProflieImg ;	
+	      
+		  $usrPCImg=DB::table('user_profile_image')->select('id',DB::raw("case when image_type=2 then concat('".$profileCoverImgPath."',userId,'/',image) else concat('".$profileCoverImgPath."',userId,'/',image) end as image"),DB::raw("'image' as image_type"),DB::raw(" 2 as deleteType"))->where('userId',$user_id)
 		  	;
 
 		  $friendQuery="(select count(*) from user_follows where ((followed_user_id=$loginUserId and follower_user_id=post_images.user_id) or 
@@ -283,7 +327,10 @@ class WebsiteController extends Controller
 		 
 
 	        $loginUserId=$data['userId'] ;
-	      $postImgPath=url('/').'/storage/app/public/post_image/' ;
+	      //$postImgPath=url('/').'/storage/app/public/post_image/' ;
+	       $postImgPathS3 = config('constants.user_post_s3');
+	     $s3BaseURL = config('constants.s3_baseURL');	
+         $postImgPath=$s3BaseURL.$postImgPathS3 ;	
 
 	      $profileCoverImgPath=url('/').'/storage/app/public/banner_image/' ;
 	      $profileImgPath=url('/').'/storage/app/public/user_image/' ;
@@ -315,7 +362,7 @@ class WebsiteController extends Controller
 
          $data['page']=$page ; 
          $data['user_id']=$user_id ;
-
+         $data['loginUserId']=$loginUserId ;
 
 
 		return view('website.pages.Profile.ajax_photo')->with('post_image',$response)->with('data',$data); 
@@ -342,8 +389,11 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 	      */
 		 $friendQuery="(select count(*) from user_follows where ((followed_user_id=$loginUserId and follower_user_id=post_images.user_id) or 
 		 (followed_user_id=post_images.user_id and follower_user_id=$loginUserId)) and isAccept=1)" ;
-		  $postImgPath=url('/').'/storage/app/public/post_image/' ;
-	      $typeQry = DB::table('post_images')->select('post_images.id',DB::raw("concat('".$postImgPath."',post_id,'/',image) as image"),DB::raw("concat('".$postImgPath."',post_id,'/',thumbnail) as thumbnail"),'image_type','posts.post_type')
+		 // $postImgPath=url('/').'/storage/app/public/post_image/' ;
+		 $postImgPathS3 = config('constants.user_post_s3');
+	     $s3BaseURL = config('constants.s3_baseURL');	
+         $postImgPath=$s3BaseURL.$postImgPathS3 ;	
+	      $typeQry = DB::table('post_images')->select('post_images.id','post_images.user_id',DB::raw("concat('".$postImgPath."',post_id,'/',image) as image"),DB::raw("concat('".$postImgPath."',post_id,'/',thumbnail) as thumbnail"),'image_type','posts.post_type')
 	      	 ->leftjoin('posts','posts.id','=','post_images.post_id')
 	         ->where('post_images.user_id',$user_id)
 	         ->where('image_type','video')
@@ -392,15 +442,14 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 	        $limit = $request->has('per_page') ? $request->get('per_page') :21;
 	        $offset = ($page - 1) * $limit ;
 	        $loginUserId=$data['userId'];
-
-         
-	      // $typeQry = DB::table('post_images')->select('id',DB::raw("concat('".$postImgPath."',post_id,'/',image) as image"),DB::raw("concat('".$postImgPath."',post_id,'/',thumbnail) as thumbnail"),'image_type')->where('user_id',$user_id)->where('image_type','video')->orderBy('id', 'DESC')->skip($offset)->take($limit)->get()->toArray();	  
-
-	      //  $totalRecord=DB::table('post_images')->where('user_id',$user_id)->where('image_type','video')->count();
+	  
 	       $friendQuery="(select count(*) from user_follows where ((followed_user_id=$loginUserId and follower_user_id=post_images.user_id) or 
 		 (followed_user_id=post_images.user_id and follower_user_id=$loginUserId)) and isAccept=1)" ;
-		  $postImgPath=url('/').'/storage/app/public/post_image/' ;
-	      $typeQry = DB::table('post_images')->select('post_images.id',DB::raw("concat('".$postImgPath."',post_id,'/',image) as image"),DB::raw("concat('".$postImgPath."',post_id,'/',thumbnail) as thumbnail"),'image_type','posts.post_type')
+		 // $postImgPath=url('/').'/storage/app/public/post_image/' ;
+		   $postImgPathS3 = config('constants.user_post_s3');
+	     $s3BaseURL = config('constants.s3_baseURL');	
+         $postImgPath=$s3BaseURL.$postImgPathS3 ;	
+	      $typeQry = DB::table('post_images')->select('post_images.id','post_images.user_id',DB::raw("concat('".$postImgPath."',post_id,'/',image) as image"),DB::raw("concat('".$postImgPath."',post_id,'/',thumbnail) as thumbnail"),'image_type','posts.post_type')
 	      	 ->leftjoin('posts','posts.id','=','post_images.post_id')
 	         ->where('post_images.user_id',$user_id)
 	         ->where('image_type','video')
@@ -429,24 +478,36 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 		}
 
          $data['page']=$page ; 
-         $data['user_id']=$user_id ;      
+         $data['user_id']=$user_id ;
+         $data['loginUserId']=$loginUserId ;   
 
 		return view('website.pages.Profile.ajax_myvideo')->with('post_image',$typeQry)->with('data',$data); 
 
 	  }
 
 	 }
-	 
-	 public function myevent(Request $request,$id=0){  
-		$data=session()->get('user_session');
+
+	 public function ajax_myevent(Request $request,$id=0){
+	 		$data=session()->get('user_session');	 		
+
 		if(!empty($data)){
+
+
 			$user_id=$id;
 
+			$page = $request->has('page') ? $request->get('page') : 10;
+			$limit = $request->has('per_page') ? $request->get('per_page') : 10;
+			$offset = ($page - 1) * $limit ;
+
+			$s3BaseURL = config('constants.s3_baseURL');
+		    $event_image = config('constants.event_image');	
+		    $goodies_image = config('constants.goodies_image');		
 			//echo $user_id;die;
-		 $booking_info=BookingRequest::where('user_id',$user_id)->where('user_id',$user_id)->where('booking_type',1)->get();
+		 $booking_info=BookingRequest::where('user_id',$user_id)->where('booking_type',1)->orderBy('id','DESC')->get()->skip($offset)->take($limit);
+
 		 //echo "<pre>";print_r($booking_info);die; 
 		 $res=array();
-		 $res1=array();
+		
 		 if(!empty($booking_info)){
 			 foreach($booking_info as $booking_infos){
 			  $user_info=User::where('id',$booking_infos->user_id)->first();
@@ -464,6 +525,8 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 				$order['order_status']='Pending';  
 			  }else if($booking_infos->status == 2){
 			     $order['order_status']='Approved';
+		      }else if($booking_infos->status == 4){
+		      	 $order['order_status']='Cancelled';
 		      }else{
 				 $order['order_status']='Cancelled'; 
 			  }
@@ -473,14 +536,49 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 			  }else{
 				$order['event_fee_type']='Free';
 			  }
-			  $imageData = DB::table('event_images')->where('event_id',$booking_infos->type_id)->first();	   
-			  $order['image']=url('/').'/storage/app/public/event_image/'.$imageData->image;
+			  $imageData = DB::table('event_images')->where('event_id',$booking_infos->type_id)->first();	
+			  $eventImgPath=$s3BaseURL.$event_image ;
+			 // $order['image']=url('/').'/storage/app/public/event_image/'.$imageData->image;
+			   $order['image']=$eventImgPath.$booking_infos->type_id.'/'.$imageData->image;
 					  
 			  $res[]=!empty($order)?$order:"";
 			 } 
 		 }
 		 
-		 $goodies_info=BookingRequest::where('user_id',$user_id)->where('user_id',$user_id)->where('booking_type',2)->get();
+		
+		 $totalRecord=BookingRequest::where('user_id',$user_id)->where('booking_type',1)->count();
+
+		 if(($offset+$limit) < $totalRecord){
+		  $data['isShowMore']=true ;  
+		}else{
+		  $data['isShowMore']=false ;  
+		}
+
+         $data['page']=$page ;         
+         $data['loginUserId']=$data['userId'] ;
+         $data['requestId']=$id ;
+			
+		 return view('website.pages.myevent.ajax_profile_event')->with('order',$res)->with('type',$data)->with('requestId',$id)->with('data',$data);  
+		}else{
+			return redirect('/');   
+		}  
+	 }
+	 
+	 public function ajax_mygoodies(Request $request,$id=0){
+	 		$data=session()->get('user_session');
+		if(!empty($data)){
+			$user_id=$id;
+
+			$s3BaseURL = config('constants.s3_baseURL');
+		    $event_image = config('constants.event_image');	
+		    $goodies_image = config('constants.goodies_image');	
+	
+		  $res1=array();
+		   $page = $request->has('page') ? $request->get('page') : 10;
+			$limit = $request->has('per_page') ? $request->get('per_page') : 10;
+			$offset = ($page - 1) * $limit ;
+		 
+		 $goodies_info=BookingRequest::where('user_id',$user_id)->where('booking_type',2)->orderBy('id','DESC')->get()->skip($offset)->take($limit);
 		 //echo "<pre>";print_r($booking_info);die; 
 		 $res1=array();  
 		 if(!empty($goodies_info)){
@@ -507,7 +605,9 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 				$god['goodies_fee_type']='Free';
 			  }
 			  if(isset($goodies_data->image)){
-			  	$god['image']=url('/').'/storage/app/public/goodies_image/'.$goodies_data->image;
+			  	$goodiesImgPath=$s3BaseURL.$goodies_image ;
+			  	//$god['image']=url('/').'/storage/app/public/goodies_image/'.$goodies_data->image;
+			  	$god['image']=$goodiesImgPath.$goodies_info->type_id.'/'.$goodies_data->image;
 			  }else{
 			  	$god['image']='';
 			  }
@@ -516,21 +616,33 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 			 } 
 		 }
 		 
-		//echo "<pre>";print_r($res);die; 
-		 //echo "<pre>";print_r($res);die; 
-		//  $data['type']=0 ;
+		
+		 $totalRecord=BookingRequest::where('user_id',$user_id)->where('booking_type',2)->count();
 
-		// $method = $request->method();
+		 if(($offset+$limit) < $totalRecord){
+		  $data['isShowMore']=true ;  
+		}else{
+		  $data['isShowMore']=false ;  
+		}
 
-		// if ($request->isMethod('post')) {
-		// 	   $data['type']=1 ;
-		// 	}
-		 // if (Request::isMethod('post'))
-			// {
-			//   
-			// }
+         $data['page']=$page ;         
+         $data['loginUserId']=$data['userId'] ;
+         $data['requestId']=$id ;
+			
 
-		 return view('website.pages.myevent.myevent1')->with('order',$res)->with('god_order',$res1)->with('type',$data);  
+		 return view('website.pages.myevent.ajax_profile_goodies')->with('god_order',$res1)->with('type',$data)->with('requestId',$id)->with('data',$data);  
+		}else{
+			return redirect('/');   
+		}  
+	 }
+
+
+	 public function myevent(Request $request,$id=0){  
+		$data=session()->get('user_session');
+		if(!empty($data)){
+			$user_id=$id;
+		
+		 return view('website.pages.myevent.myevent_profile')->with('type',$data)->with('requestId',$id);  
 		}else{
 			return redirect('/');   
 		}  
@@ -611,7 +723,7 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
         );  
 		DB::table('users')->where('id',$userId)->update($updateData);
 		if(!empty($user->image)){
-		    $image=url('/').'/storage/app/public/user_image/'.$user->image;	
+		    $image=userProfileImgPath().$user_info['id'].'/'.$user->image;	
 		}else{
 			$image=url('/').'/storage/app/public/user_image/'.'user_holder.svg';
 		}
@@ -646,7 +758,8 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 			foreach($noti_info as $noti_infos){
 			$user_info = DB::table('users')->where('id',$noti_infos->sender_id)->first();
 			if(!empty($user_info->image)){
-				$not['image']=url('/').'/storage/app/public/user_image/'.$user_info->image;
+
+				$not['image']=userProfileImgPath().$noti_infos->sender_id.'/'.$user_info->image;
 				}else{
 				 $not['image']=url('/').'/storage/app/public/user_image/'.'user.png';
 				}
@@ -660,31 +773,31 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 			}
 		}
 		 
-		$friend_info = DB::table('friend_list')->where('request_id',$id)->where('status',1)->orderBy('id', 'desc')->limit(3)->get();
-		$res2=array();
-		if(!empty($friend_info)){
-			foreach($friend_info as $friend_infos){
-				$fr_user_info = DB::table('users')->where('id',$friend_infos->user_id)->first();
+		// $friend_info = DB::table('friend_list')->where('request_id',$id)->where('status',1)->orderBy('id', 'desc')->limit(3)->get();
+		// $res2=array();
+		// if(!empty($friend_info)){
+		// 	foreach($friend_info as $friend_infos){
+		// 		$fr_user_info = DB::table('users')->where('id',$friend_infos->user_id)->first();
 				
-				  $date1 = Carbon::parse($friend_infos->created_at);
-				  $elapsed1 = $date1->diffForHumans(Carbon::now());
-				  $elapsed1=createdAt($elapsed1);
+		// 		  $date1 = Carbon::parse($friend_infos->created_at);
+		// 		  $elapsed1 = $date1->diffForHumans(Carbon::now());
+		// 		  $elapsed1=createdAt($elapsed1);
 				  
 				  
-				if(!empty($fr_user_info->image)){
-				$friend['image']=url('/').'/storage/app/public/user_image/'.$fr_user_info->image;
-				}else{
-				 $friend['image']=url('/').'/storage/app/public/user_image/'.'user.png';
-				}
-				$friend['time']=$elapsed1;
-				$friend['id']=$friend_infos->id;
-                $friend['message']=$fr_user_info->first_name.' '.$fr_user_info->last_name.' send you friend request'; 				
-                $res2[]=!empty($friend)?$friend:"";			  	
-			}
-		}
+		// 		if(!empty($fr_user_info->image)){
+		// 		$friend['image']=url('/').'/storage/app/public/user_image/'.$fr_user_info->image;
+		// 		}else{
+		// 		 $friend['image']=url('/').'/storage/app/public/user_image/'.'user.png';
+		// 		}
+		// 		$friend['time']=$elapsed1;
+		// 		$friend['id']=$friend_infos->id;
+  //               $friend['message']=$fr_user_info->first_name.' '.$fr_user_info->last_name.' send you friend request'; 				
+  //               $res2[]=!empty($friend)?$friend:"";			  	
+		// 	}
+		// }
 		 $count= count($res)+ count($res2);
-        // echo "<pre>";print_r($res);
-		return view('website.notification')->with('notification',$res)->with('friend_request',$res2)->with('count',$count);      
+        // echo "<pre>";print_r($res);->with('friend_request',$res2)
+		return view('website.notification')->with('notification',$res)->with('count',$count);      
 		
 		   
 	}
@@ -711,7 +824,7 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 
          $goodies_info = DB::table('goodies')->where('id',$noti_infos->sender_id)->first();
          if(!empty($goodies_info)){
-           $not['image']=url('/').'/storage/app/public/goodies_image/'.$goodies_info->image; 
+           $not['image']=goodiesImgPath().$noti_infos->sender_id.'/'.$goodies_info->image; 
          }else{
           $not['image']=url('/').'/storage/app/public/user_image/'.'user.png';
          }
@@ -722,7 +835,7 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
             
           //echo "<pre>";print_r($event_info);die; 
           if(!empty($event_info)){
-            $not['image']=url('/').'/storage/app/public/event_image/'.$event_info->image;
+            $not['image']=eventImgPath().$noti_infos->sender_id.'/'.$event_info->image;
           }else{
              $not['image']=url('/').'/storage/app/public/user_image/'.'user.png';
           }
@@ -730,7 +843,7 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
         }else{
     			$user_info = DB::table('users')->where('id',$noti_infos->sender_id)->first();
     			if(!empty($user_info->image)){
-    				$not['image']=url('/').'/storage/app/public/user_image/'.$user_info->image;
+    				$not['image']=userProfileImgPath().$noti_infos->sender_id.'/'.$user_info->image;
     				}else{
     				 $not['image']=url('/').'/storage/app/public/user_image/'.'user.png';
     				}
@@ -827,7 +940,7 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 				  $event['event_end_date']=$eventDatas->event_date;
 				  $event['event_descrption']=$eventDatas->event_descrption;
                   $event['address']=$eventDatas->address;
-				  $event['image']=url('/').'/storage/app/public/event_image/'.$image_info->image;
+				  $event['image']=eventImgPath().$eventDatas->id.'/'.$image_info->image;
 				  $res[]=!empty($event)?$event:"";
 
 			}				
@@ -836,25 +949,37 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
     	return view('/upcoming_event')->with('event_info',$res);  
     }
 
-    public function home(Request $request){
-    	
+    public function home(Request $request){  
+
      	$data=session()->get('user_session');
+
+     
+		
 		// if(empty($data)){  
 		// 	return redirect('/');   
 		// }
+		// $dat=session()->get('defaultCountry');
+		//    		echo "<pre>";
+		//   		print_r($dat);
+		//   		exit ;
 
+     		
+     	
 		$user_id=$data['userId'];      
 
 	    $array=aboutInfo($user_id);
 			 			
 		$get_neartest_follow=peopleYouMayKnow(2);
-		$usrImgPath=url('/').'/storage/app/public/user_image/' ;
+		//$usrImgPath=url('/').'/storage/app/public/user_image/' ;
 		$defaultPath=url('/').'/storage/app/public/user_image/'.'no-img.png' ;	
 
+		 $s3BaseURL = config('constants.s3_baseURL');  
+         $userProflieImg = config('constants.user_profile_img_s3');
+         $usrImgPath=$s3BaseURL.$userProflieImg ;
 		
 
-		$query=DB::table("user_follows")->select('users.id',DB::raw("concat(first_name,' ',last_name) as name"),DB::raw("case when image is null then concat('".$defaultPath."') else concat('".$usrImgPath."',image) end as image"))->join('users','users.id','=','user_follows.follower_user_id')->where('user_follows.followed_user_id',$user_id)->where('isAccept',1)->where('login_status',2)->get()->toArray();
-	    $query1=DB::table("user_follows")->select('users.id',DB::raw("concat(first_name,' ',last_name) as name"),DB::raw("case when image is null then concat('".$defaultPath."') else concat('".$usrImgPath."',image) end as image"))->join('users','users.id','=','user_follows.followed_user_id')->where('user_follows.follower_user_id',$user_id)->where('isAccept',1)->where('login_status',2)->get()->toArray();
+		$query=DB::table("user_follows")->select('users.id',DB::raw("concat(first_name,' ',last_name) as name"),DB::raw("case when image is null then concat('".$defaultPath."') else concat('".$usrImgPath."',users.id,'/',image) end as image"))->join('users','users.id','=','user_follows.follower_user_id')->where('user_follows.followed_user_id',$user_id)->where('isAccept',1)->where('login_status',2)->get()->toArray();
+	    $query1=DB::table("user_follows")->select('users.id',DB::raw("concat(first_name,' ',last_name) as name"),DB::raw("case when image is null then concat('".$defaultPath."') else concat('".$usrImgPath."',users.id,'/',image) end as image"))->join('users','users.id','=','user_follows.followed_user_id')->where('user_follows.follower_user_id',$user_id)->where('isAccept',1)->where('login_status',2)->get()->toArray();
 	
 //
 	     $res=array_merge($query,$query1);
@@ -862,10 +987,12 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 		/* story info */
 		 $current_date=date("Y-m-d H:i:s");
 		
-		$sImgPath = URL('/').'/storage/app/public/stories_image/' ;
+		//$sImgPath = URL('/').'/storage/app/public/stories_image/' ;
+		$storiesImgS3 = config('constants.user_stories_s3');
+		$sImgPath = $s3BaseURL.$storiesImgS3 ;
 		$friend=getFriendListUserId($user_id);  
 
-		$story_infos_ = DB::table('stories')->select('users.id',DB::raw(" concat(users.first_name,' ',users.last_name) as name"),DB::raw(" case when stories.image is null then '' else concat('".$sImgPath."',stories.image) end as image"),DB::raw(" count(*) as totalStory"),'file_type')
+		$story_infos_ = DB::table('stories')->select('users.id',DB::raw(" concat(users.first_name,' ',users.last_name) as name"),DB::raw(" case when stories.image is null then '' else concat('".$sImgPath."',stories.user_id,'/',stories.image) end as image"),DB::raw(" count(*) as totalStory"),'file_type')
 		->leftjoin('users','users.id','=','stories.user_id')		
 		->where('user_id','!=',$user_id)->where('stories.created_at','<=',$current_date)->where('stories.till_valid','>=',$current_date)
 		->whereIn('stories.user_id',$friend)
@@ -880,12 +1007,13 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 		  $storiesType = isset($myStoryImg->file_type)?$myStoryImg->file_type:1 ;
 
 		 if($myStoryImage!='' && $my_story_info > 0){
-		 	$mSImg = URL('/').'/storage/app/public/stories_image/'.$myStoryImage ;
+		 	//$mSImg = URL('/').'/storage/app/public/stories_image/'.$myStoryImage ;
+		 	$mSImg = $sImgPath.$user_id.'/'.$myStoryImage ;
 		 }else{
 		 	$mSImg = $array['users']['image'] ;
 		 }					 
 			
-		 
+		
 
 			
 		   echo view('index',$array)->with('online_contact',$res)->with('get_neartest_follow',$get_neartest_follow)->with('story_count',$my_story_info)->with('selfStoryImg',$mSImg)->with('storiesType',$storiesType)->with('stories_info',$story_infos_);  
@@ -901,8 +1029,10 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 			return redirect('/');   
 		}
 
+
+    		
 		$user_id=$data['userId'];
-	 $requestUserId = isset($request->userId)?$request->userId:0 ;
+	   $requestUserId = isset($request->userId)?$request->userId:0 ;
 	 if($requestUserId > 0){
 	 	$user_id=$requestUserId ;
 	 }
@@ -922,12 +1052,17 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 
          $loginUserId=$data['userId'] ;
 		
-         $friendList=array(111);
+       
 
 
 		$array=array();  
 
-		  $usrImgPath=url('/').'/storage/app/public/user_image/' ;
+		  //$usrImgPath=url('/').'/storage/app/public/user_image/' ;
+
+		   $s3BaseURL = config('constants.s3_baseURL');  
+           $userProflieImg = config('constants.user_profile_img_s3');
+           $usrImgPath=$s3BaseURL.$userProflieImg ;
+
           $defaultImgPath=url('/').'/storage/app/public/user_image/user.png';
 
 		 $postLike=" case when (select count(*) from post_like where post_id=p.id and status=1) is null then 0 else (select count(*) from post_like where post_id=p.id and status=1) end as post_like_count " ;	 
@@ -938,7 +1073,7 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 		 (followed_user_id=p.user_id and follower_user_id=$loginUserId)) and isAccept=1)" ;
 		 $cond1=" and (case when (post_text='' and (select count(*) from post_images where post_id=p.id)=0) then 0 else 1 end)=1" ;
 
-		 $typeQry = "select p.id as postId,p.user_id,concat(u.first_name,' ',u.last_name) as name ,case when u.image is null then concat('".$defaultImgPath."') else concat('".$usrImgPath."',u.image) end as user_image ,post_text,post_type,$postLike , $postCommentCount ,$replyCommentCount,  $youLikeOrNot,p.created_at,case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePrivacy from posts as p left join users as u on u.id=p.user_id where (case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end)=1 $cond && (case when (post_type=2 && p.user_id!=$loginUserId)  then $friendQuery else 1 end)=1 $cond1 order by p.id desc LIMIT $limit OFFSET $offset" ; 
+		 $typeQry = "select p.id as postId,p.user_id,concat(u.first_name,' ',u.last_name) as name ,case when u.image is null then concat('".$defaultImgPath."') else concat('".$usrImgPath."',u.id,'/',u.image) end as user_image ,post_text,post_type,$postLike , $postCommentCount ,$replyCommentCount,  $youLikeOrNot,p.created_at,case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePrivacy from posts as p left join users as u on u.id=p.user_id where (case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end)=1 $cond && (case when (post_type=2 && p.user_id!=$loginUserId)  then $friendQuery else 1 end)=1 $cond1 order by p.id desc LIMIT $limit OFFSET $offset" ; 
 		 
          $postData = DB::select($typeQry);
         
@@ -977,7 +1112,12 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 				  $post['session_image']=$value->user_image;
 				  $post['user_post_is_like']=$value->user_post_is_like ;
 				
-                 $postImagePath=url('/').'/storage/app/public/post_image/'.$value->postId.'/' ;					
+				  
+					
+                 //$postImagePath=url('/').'/storage/app/public/post_image/'.$value->postId.'/' ;
+                 $postImgPathS3 = config('constants.user_post_s3');
+			     $s3BaseURL = config('constants.s3_baseURL');	
+                 $postImagePath=$s3BaseURL.$postImgPathS3.$value->postId.'/' ;				
 				  $imgQry = "select id,image_type as file_type,concat('".$postImagePath."',image) as image,concat('".$postImagePath."',thumbnail) as thumbnail from post_images where post_id=".$value->postId; 
 				  
                   $imageData = DB::select($imgQry);
@@ -1117,14 +1257,20 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 			return redirect('/');   
 		}
          $post_id=$id;		
-         $directory='/app/public/post_image/'.$post_id ;
+         $directory=postImgPath().$post_id ;
 		 try{
 		
 		
 		 $post_delete= DB::table('posts')->where('id',$post_id)->delete();
 		 $post_profile_delete= DB::table('post_images')->where('post_id',$post_id)->delete();
 
-		  File::deleteDirectory(storage_path($directory));
+		  //File::deleteDirectory(storage_path($directory));
+		   $postImg=config('constants.user_post_s3');
+		   if(count((array)Storage::disk('s3')->exists($postImg.$post_id)) > 0)
+		    {
+		        Storage::disk('s3')->deleteDirectory($postImg.$post_id);
+		    }
+
 		 if($post_delete){
 			 echo 1;
 		 }else{
@@ -1204,19 +1350,19 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 				  $post['time']=$elapsed;
 				  unset($total_count);
 				  if($user_info->image){
-							$post['user_image']=url('/').'/storage/app/public/user_image/'.$user_info->image;
+							$post['user_image']=userProfileImgPath().$postDatas->user_id.'/'.$user_info->image;
 							}else{
 							 $post['user_image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
 							}
                   if($session_user_info->image){  
-						$post['session_image']=url('/').'/storage/app/public/user_image/'.$session_user_info->image;
+						$post['session_image']=userProfileImgPath().$postDatas->user_id.'/'.$session_user_info->image;
 						}else{
 						 $post['session_image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
 						} 							
 				  $imgQry = "select * from post_images where post_id=".$postDatas->id; 
                   $imageData = DB::select($imgQry);
 				  foreach($imageData as $imageDatas){  
-				  $image[]=url('/').'/storage/app/public/post_image/'.$imageDatas->image;
+				  $image[]=postImgPath().$imageDatas->post_id.'/'.$imageDatas->image;
 				  //$image['post_id']=$postDatas->id;
 				  //$post_image[]=$image;
 				  }
@@ -1258,7 +1404,10 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 		 $post['time']=$elapsed;
 
 		
-		 $imgPath = url('/').'/storage/app/public/post_image/'.$post_info->id.'/' ;
+		 //$imgPath = url('/').'/storage/app/public/post_image/'.$post_info->id.'/' ;
+		 $postImgPathS3 = config('constants.user_post_s3');
+	     $s3BaseURL = config('constants.s3_baseURL');	
+         $imgPath=$s3BaseURL.$postImgPathS3.$post_info->id.'/' ;	
 		 $imgQry = DB::table('post_images')->select('id',DB::raw("case when id=$imageId then 1 else 0 end as selectImg"),'post_id',DB::raw("concat('".$imgPath."',image) as image"),DB::raw("case when thumbnail='' || thumbnail is null then '' else concat('".$imgPath."',thumbnail) end as thumbnail"),DB::raw('image_type as file_type'))->where('post_id',$post_info->id) ->orderBy('selectImg', 'desc')->get()->toArray();
        
 		 $post['post_image']=!empty($imgQry)?$imgQry:"";
@@ -1296,7 +1445,7 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 				 $god['start_date']=$goodiesDatas->start_date;
 				 $god['end_date']=$goodiesDatas->end_date;
 				 if(!empty($goodiesDatas->image)){
-				   $god['image']=url('/').'/storage/app/public/goodies_image/'.$goodiesDatas->image; 
+				   $god['image']=goodiesImgPath().$goodiesDatas->id.'/'.$goodiesDatas->image; 
 				 }else{
 					 $god['image']='';
 				 }
@@ -1376,7 +1525,7 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 		$total=0;
 		    if(!empty($eventData)){
 				foreach($eventData as $eventDatas){ 
-					  $user_info = DB::table('users')->where('id',1)->first();
+					  $user_info = DB::table('users')->where('id',$data['userId'])->first();
 					  $session_user_info = DB::table('users')->where('id', $data['userId'])->first();
 					  $event_like_count= DB::table('event_like')->where('event_id', $eventDatas->id)->where('status',1)->count();
 					  $user_event_like_yes_not= DB::table('event_like')->where('event_id', $eventDatas->id)->where('user_id', $data['userId'])->where('status',1)->first();
@@ -1439,12 +1588,12 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 
                       					  
                       if($session_user_info->image){  
-						$event['session_image']=url('/').'/storage/app/public/user_image/'.$session_user_info->image;
+						$event['session_image']=userProfileImgPath().$data['userId'].'/'.$session_user_info->image;
 						}else{
 						 $event['session_image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
 						} 					  
 					  if(!empty($imageData )){  
-					  $event['image']=url('/').'/storage/app/public/event_image/'.$imageData->image;
+					  $event['image']=eventImgPath().$eventDatas->id.'/'.$imageData->image;
 					  }else{
 						  
 					  }
@@ -1503,7 +1652,7 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 							$reply['event_id']=$event_id;
 							$reply['reply_like_count']=$reply_like_count; 
 							if($user_info1->image){
-							$reply['image']=url('/').'/storage/app/public/user_image/'.$user_info1->image;
+							$reply['image']=userProfileImgPath().$reply_comments->user_id.'/'.$user_info1->image;
 							}else{
 							 $reply['image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
 							}
@@ -1511,6 +1660,8 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
                          }							 
 								
 						}
+
+
 					  $user_info = DB::table('users')->where('id',$commentDatas->user_id)->first();
 					  $session_user_info = DB::table('users')->where('id',$data['userId'])->first();
 					  $comment_count = DB::table('event_comments')->where('event_id',$event_id)->count();
@@ -1538,12 +1689,12 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
                     $comment['reply_comment_count']=!empty($reply_comment_count)?$reply_comment_count:"0";		  			
 					$comment['name']=$user_info->first_name .' '. $user_info->last_name;
 					if($user_info->image){
-						$comment['image']=url('/').'/storage/app/public/user_image/'.$user_info->image;
+						$comment['image']=userProfileImgPath().$commentDatas->user_id.'/'.$user_info->image;
 						}else{
 						 $comment['image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
 						}
 					if($session_user_info->image){
-						$comment['session_image']=url('/').'/storage/app/public/user_image/'.$session_user_info->image;
+						$comment['session_image']=userProfileImgPath().$commentDatas->user_id.'/'.$session_user_info->image;
 						}else{
 						 $comment['session_image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
 						} 
@@ -1606,12 +1757,12 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 					$comment['time']=$elapsed;
 					$comment['name']=$user_info->first_name .' '. $user_info->last_name;
 					if($user_info->image){
-						$comment['image']=url('/').'/storage/app/public/user_image/'.$user_info->image;
+						$comment['image']=userProfileImgPath().$commentDatas->user_id.'/'.$user_info->image;
 						}else{
 						 $comment['image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
 						}
 					if($session_user_info->image){
-						$comment['session_image']=url('/').'/storage/app/public/user_image/'.$session_user_info->image;
+						$comment['session_image']=userProfileImgPath().$commentDatas->user_id.'/'.$session_user_info->image;
 						}else{
 						 $comment['session_image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
 						}  
@@ -1922,25 +2073,26 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 		$user_id = $data['userId'] ;//isset($request->user_id)?$request->user_id:'' ;
 	   try{
     
-	   // if($request->hasFile('myfile')){
-    //             $imgPath='/public/user_image';       
-    //             $filenamewithextension = $request->file('myfile')->getClientOriginalName();
-    //              $filename = pathinfo($filenamewithextension, PATHINFO_FILENAME);
-    //              //get file extension
-    //              $extension = $request->file('myfile')->getClientOriginalExtension();
-    //              $filename=str_replace(' ', '_', $filename);
-    //              $filenametostore = $filename.'_'.time().'.'.$extension;          
-    //              //Upload File
-    //              $request->file('myfile')->storeAs($imgPath,$filenametostore);
-    //             $updateData['image']=$filenametostore; 
-    //       }
+	
       
 		 
-		 	$filenametostore = 'profileImg'.$user_id.'_'.time().'.png';
+		 $filenametostore = 'profileImg'.$user_id.'_'.time().'.png';
         //$smallthumbnailpath = public_path('storage/user_image/'.$filenametostore);
         $smallthumbnailpath = storage_path('app/public/user_image/'.$filenametostore);
     	Image::make(file_get_contents($request->image))->save($smallthumbnailpath);
 
+    	
+		
+    	
+    	/* Image upload on S3 */
+    	$profileImgPathS3 = config('constants.user_profile_img_s3');
+    	$s3BaseURL = config('constants.s3_baseURL');
+		list($baseType, $image) = explode(';', $request->image);
+		list(, $image) = explode(',', $image);
+		$image = base64_decode($image);
+		$p = Storage::disk('s3')->put($profileImgPathS3.$user_id.'/'. $filenametostore, $image, 'public'); // old : $file
+		$image = $s3BaseURL.$profileImgPathS3.$user_id.'/'. $filenametostore ;
+    	/* End */
       	
       	$updateData['image']=$filenametostore; 
 
@@ -1949,7 +2101,8 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 
           $request->session()->forget('user_session.image');    
            User::where('id',$user_id)->update($updateData); 
-           	$image=url('/').'/storage/app/public/user_image/'.$updateData['image'];
+           
+           	//$image=url('/').'/storage/app/public/user_image/'.$updateData['image'];
             $request->session()->put('user_session.image', $image);	 
             /* Profile Image*/ 
 	          $profileImg=array(
@@ -1961,7 +2114,7 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
            echo $image;                                                            
 	     }
            catch(\Exception $e){
-          echo 2; 
+          echo $e; 
          
         }  		  
 
@@ -2049,7 +2202,7 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 							$reply['post_id']=$post_id;
 							$reply['reply_like_count']=$reply_like_count; 
 							if($user_info1->image){
-							$reply['image']=url('/').'/storage/app/public/user_image/'.$user_info1->image;
+							$reply['image']=userProfileImgPath().$reply_comments->user_id.'/'.$user_info1->image;
 							}else{
 							 $reply['image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
 							}
@@ -2089,12 +2242,12 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
                     $comment['reply_comment_count']=!empty($reply_comment_count)?$reply_comment_count:"0";		  			
 					$comment['name']=$user_info->first_name .' '. $user_info->last_name;
 					if($user_info->image){
-						$comment['image']=url('/').'/storage/app/public/user_image/'.$user_info->image;
+						$comment['image']=userProfileImgPath().$commentDatas->user_id.'/'.$user_info->image;
 						}else{
 						 $comment['image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
 						}
 					if(isset($session_user_info->image) && $session_user_info->image){
-						$comment['session_image']=url('/').'/storage/app/public/user_image/'.$session_user_info->image;
+						$comment['session_image']=userProfileImgPath().$commentDatas->user_id.'/'.$session_user_info->image;
 						}else{
 						 $comment['session_image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
 						} 
@@ -2189,7 +2342,7 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 							$reply['post_id']=$post_id;
 							$reply['reply_like_count']=$reply_like_count; 
 							if($user_info1->image){
-							$reply['image']=url('/').'/storage/app/public/user_image/'.$user_info1->image;
+							$reply['image']=userProfileImgPath().$reply_comments->user_id.'/'.$user_info1->image;
 							}else{
 							 $reply['image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
 							}
@@ -2229,12 +2382,12 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
                     $comment['reply_comment_count']=!empty($reply_comment_count)?$reply_comment_count:"0";		  			
 					$comment['name']=$user_info->first_name .' '. $user_info->last_name;
 					if($user_info->image){
-						$comment['image']=url('/').'/storage/app/public/user_image/'.$user_info->image;
+						$comment['image']=userProfileImgPath().$commentDatas->user_id.'/'.$user_info->image;
 						}else{
 						 $comment['image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
 						}
 					if(isset($session_user_info->image) && $session_user_info->image){
-						$comment['session_image']=url('/').'/storage/app/public/user_image/'.$session_user_info->image;
+						$comment['session_image']=userProfileImgPath().$commentDatas->user_id.'/'.$session_user_info->image;
 						}else{
 						 $comment['session_image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
 						} 
@@ -2313,12 +2466,12 @@ case when (p.user_id!=$loginUserId && post_type=3) then 0 else 1 end as onlymePr
 					$comment['time']=$elapsed;
 					$comment['name']=$user_info->first_name .' '. $user_info->last_name;
 					if($user_info->image){
-						$comment['image']=url('/').'/storage/app/public/user_image/'.$user_info->image;
+						$comment['image']=userProfileImgPath().$commentDatas->user_id.'/'.$user_info->image;
 						}else{
 						 $comment['image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
 						}
 					if($session_user_info->image){
-						$comment['session_image']=url('/').'/storage/app/public/user_image/'.$session_user_info->image;
+						$comment['session_image']=userProfileImgPath().$commentDatas->user_id.'/'.$session_user_info->image;
 						}else{
 						 $comment['session_image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
 						}  
@@ -2382,6 +2535,17 @@ public function postTest() {
 
     	Image::make(file_get_contents($request->image))->save($smallthumbnailpath);
 
+    	/* Image upload on S3 */
+    	$profileImgPathS3 = config('constants.user_profile_img_s3');
+    	$s3BaseURL = config('constants.s3_baseURL');
+		list($baseType, $image) = explode(';', $request->image);
+		list(, $image) = explode(',', $image);
+		$image = base64_decode($image);
+		$p = Storage::disk('s3')->put($profileImgPathS3.$user_id.'/'. $filenametostore, $image, 'public'); // old : $file
+		$image = $s3BaseURL.$profileImgPathS3.$user_id.'/'. $filenametostore ;
+    	/* End */
+
+
       	
       	$updateData['banner_image']=$filenametostore;
       	 $updateData=array(
@@ -2402,7 +2566,7 @@ public function postTest() {
    		   // exit ;
 		   if(1){
 
-				$image=url('/').'/storage/app/public/banner_image/'.$filenametostore;
+				//$image=url('/').'/storage/app/public/banner_image/'.$filenametostore;
 				
 				$profileImg=array(
      			'userId'=>$user_id ,
@@ -2446,11 +2610,16 @@ public function postTest() {
                     $mime_type = finfo_file($file_info, $file);
 					$fileType = explode('/', $mime_type)[0]; 
 					$imgPath='/public/stories_image';  
-					$image_name = md5(rand(1000, 10000));
+					$image_name = md5(rand(1000, 10000)).time();
 					$ext = strtolower($file->getClientOriginalExtension());
                     
 					$image_full_name = $image_name . '.' . $ext;
-					$file->storeAs($imgPath,$image_full_name);
+					//$file->storeAs($imgPath,$image_full_name);
+
+				   $postImgPathS3 = config('constants.user_stories_s3');			      
+				   $file->storeAs($postImgPathS3.$user_id.'/',$image_full_name,'s3Public');
+					
+
                     $image=$image_full_name; 
 					$input=array(
 							'image'=>$image,
@@ -2472,6 +2641,7 @@ public function postTest() {
         }  		  
 
      }
+     /*----*/
 	 public function viewStoryModel($id=null){
 		$data=session()->get('user_session');
         $user_id=$data['userId'];
@@ -2512,7 +2682,10 @@ public function postTest() {
 					$story['id']=$story_info->id;
 					$story['file_type']=$story_info->file_type;
 					$story['name']=$user_info->first_name.' '.$user_info->last_name;
-					$story['file']=url('/').'/storage/app/public/stories_image/'.$story_info->image;
+					$storyBaseUrl = config('constants.s3_baseURL');
+					$storyImgPathS3 = config('constants.user_stories_s3');
+					//$story['file']=url('/').'/storage/app/public/stories_image/'.$story_info->image;
+					$story['file']=$storyBaseUrl.$storyImgPathS3.$story_info->user_id.'/'.$story_info->image ; //$storyBaseUrl.$storyImgPathS3.$story_info->user_id.'/'.$story_info->image;
 					$story['story_user_id']=$story_info->user_id;
 					$story['session_id']=$user_id;
 					$story['is_like']=$story_info->is_like;
@@ -2578,8 +2751,11 @@ public function postTest() {
 			);
 		$insertmember = EventView::create($insertData);
         }
+        $array=aboutInfo($user_id);
+		}else{
+			$array=array();
+		}
 		
-		$array=aboutInfo($user_id);
 
         $event_info = DB::table('events')->where('id', $request->id)->first();
 		//echo "<pre>";print_r($event_info);die; 
@@ -2604,7 +2780,7 @@ public function postTest() {
 					  $imageData = DB::table('event_images')->where('event_id',$event_info->id)->first();	
 					  
 					  if(!empty($imageData )){  
-					  $event['image']=url('/').'/storage/app/public/event_image/'.$imageData->image;
+					  $event['image']=eventImgPath().$event_info->id.'/'.$imageData->image;
 					  }else{  
 					  	$event['image']='' ;
 					  }
@@ -2614,17 +2790,20 @@ public function postTest() {
 				$data['ogImage']=$event['image'] ;
 				$data['ogdescription']=$event_info->event_descrption;
 				$data['canonical']=URL('/') ;
-             
+             	$data['canonical']=URL('/') ;
+             	$data['isLogin']=isset($data['userId'])?1:0 ;
         // eventDetails
 				//eventDetail_share
 		return view('website/eventDetails',$array)->with('event_info',$event)->with('data',$data);
-	 }else{
-		return redirect('/');  
-	 }		 
+	 // }else{
+		// return redirect('/');  
+	 // }		 
 	}
 	
 	public function goodiesDetails(Request $request){
 		$data=session()->get('user_session');
+		//if(!empty($data)){
+		$array=array();
 		if(!empty($data)){
 		$goodies_view_info = DB::table('goodies_view')->where('goodies_id', $request->id)->where('user_id',$data['userId'])->first();
 		if(empty($goodies_view_info)){  
@@ -2634,9 +2813,14 @@ public function postTest() {
 				'created_at'=>date("Y-m-d H:i:s"),	
 			);
 		$insertmember = GoodiesView::create($insertData);
+        }
+
+         $user_id=$data['userId'];
+		 $array=aboutInfo($user_id);
+
         }  
-        $user_id=$data['userId'];
-		$array=aboutInfo($user_id);
+        
+       
         $goodies_info = DB::table('goodies')->where('id', $request->id)->first();
 		//echo "<pre>";print_r($event_info);die; 
 		    if(!empty($goodies_info)){
@@ -2657,8 +2841,11 @@ public function postTest() {
 					  $goodies['goodies_address']=$goodies_info->goodies_address;
 					  $goodies['time']=$elapsed;
                       $goodies['goodies_view_count']=!empty($goodies_view_count)?$goodies_view_count:"";					  
+                      $postImgPathS3 = config('constants.goodies_image');
+			          $s3BaseURL = config('constants.s3_baseURL');
 					  if(!empty($goodies_info->image)){    
-					  $goodies['image']=url('/').'/storage/app/public/goodies_image/'.$goodies_info->image;
+					  //$goodies['image']=url('/').'/storage/app/public/goodies_image/'.$goodies_info->image;
+					  $goodies['image']=$s3BaseURL.$postImgPathS3.$goodies_info->id.'/'.$goodies_info->image;
 					  }else{ 
 					  $goodies['image']=''; 
 					  }
@@ -2670,14 +2857,15 @@ public function postTest() {
 				$data['ogImage']=$goodies['image'] ;
 				$data['ogdescription']=$goodies_info->goodies_descrption ;
 				$data['canonical']=URL('/') ;
+				$data['isLogin']=isset($data['userId'])?1:0 ;
 
 				 /* end */
 
 		return view('website/goodiesDetails',$array)->with('goodies_info',$goodies)->with('data',$data);  
 
-	 }else{
-		return redirect('/');  
-	 }		 
+	 // }else{
+		// return redirect('/');  
+	 // }		 
 	}
 
 	public function Stories(){
@@ -2794,39 +2982,76 @@ public function postTest() {
 
 
 					//$file->storeAs($imgPath,$image_full_name);
-					$file->storeAs($imgPath.'/'.$post_id.'/',$image_full_name);
+					//$file->storeAs($imgPath.'/'.$post_id.'/',$image_full_name);
 
 					
                     $image=$image_full_name; 
-
+                     $imagePath=$imgPath.'/'.$post_id.'/'.$image_full_name ;
                      $isSendMail = config('constants.isSendMail');
 		  
                    /* thumbnail */
                    //&&  $isSendMail==1
+                   /* s3 storage Code */
+                   $postImgPathS3 = config('constants.user_post_s3');
+			       $s3BaseURL = config('constants.s3_baseURL');
+					
+					
+					$file->storeAs($postImgPathS3.$post_id.'/',$image_full_name,'s3Public');
+					
+
+                   /* end */
                      if($fileType=='image'){
+
+                     	$postImgPath = $s3BaseURL.$postImgPathS3.$post_id.'/'.$image_full_name ;
+					    $postImgResize=getImageHeight($postImgPath);        
+
+						// $img = Image::make($file->getRealPath())->resize(1024, null, function ($constraint) {
+						// $constraint->aspectRatio();
+						// });
+
+						$img = Image::make($file->getRealPath())->orientate()->fit(1024, (int)$postImgResize, function ($constraint) {
+						$constraint->aspectRatio();
+						});
+
+                     	 $smallthumbnail = $filename.'_1200_1200_'.time().'.jpg';  
+                         Storage::disk('s3')->put($postImgPathS3.$post_id.'/'.$smallthumbnail, $img->stream()->__toString(),'public');
+
+
+               			/*
                			$smallthumbnail = $filename.'_1200_1200_'.time().'.jpg';    
 		               $file->storeAs('public/post_image/'.$post_id.'/', $smallthumbnail);
-		              $smallthumbnailpath = storage_path('app/public').'/post_image/'.$post_id.'/'.$smallthumbnail ;
+		               $smallthumbnailpath = storage_path('app/public').'/post_image/'.$post_id.'/'.$smallthumbnail ;
 		               
-		               // echo $smallthumbnailpath = public_path('storage/post_image/'.$post_id.'/'.$smallthumbnail);
-		               
-		              $this->createThumbnail($smallthumbnailpath, 1200, 1200);
-             
-              		}else if($fileType=='video' &&  $isSendMail==1){              	   
+		               $postImagePath=url('/').'/storage/app/public/post_image/'.$post_id.'/'.$image_full_name ;		          
+		               $postImgResize=getImageHeight($postImagePath);
+		            
+		              $this->createThumbnail($smallthumbnailpath, 1024, $postImgResize);
+             			*/
+              		}else if($fileType=='video' &&  $isSendMail==1){     
+
+              		$file->storeAs($imgPath.'/'.$post_id.'/',$image_full_name);         	   
 // 
                       $smallthumbnail = $filename.'_100_100_'.time().'.jpg';    
                       
-               
+                      VideoThumbnail::createThumbnail(
+		                storage_path('app/public').'/post_image/'.$post_id.'/'.$image_full_name, 
+		                storage_path('app/public').'/post_image/'.$post_id, 
+		                $smallthumbnail, 
+		                10, 
+		                1200, 
+		                1200
+		                );
+                   
+	                  $Imagepath = storage_path('app/public').'/post_image/'.$post_id.'/'.$smallthumbnail;
 
-              	 VideoThumbnail::createThumbnail(
-                storage_path('app/public').'/post_image/'.$post_id.'/'.$image_full_name, 
-                storage_path('app/public').'/post_image/'.$post_id, 
-                $smallthumbnail, 
-                10, 
-                1200, 
-                1200
-                );
-              
+                 
+                   if(file_exists($Imagepath)){
+	                  	$files = File::get($Imagepath);
+                        Storage::disk('s3')->put($postImgPathS3.$post_id.'/'.$smallthumbnail, $files,'public');
+	                  }
+              		
+
+            
 
               }else{
                 $smallthumbnail ='';    
@@ -2846,19 +3071,7 @@ public function postTest() {
 				}
 			}
 			
-			// echo "<pre>";
-			// print_r($d);
-			// exit ;
-			// $friend_list = DB::table('friend_list')->where('user_id',$data['userId'])->where('status',2)->get();
-			// 		if(count($friend_list) > 0){
-			// 			foreach($friend_list as $friend_lists){
-			// 				$this->send_notification($friend_lists->user_id,$friend_lists->request_id,1);			 
-			// 			 }
-			//         }  			
-			
-			
-				
-				
+							
 				echo successResponse([],'Save successfully'); 
 			}
 			 catch(\Exception $e)
@@ -2873,13 +3086,19 @@ public function postTest() {
 		public function createThumbnail($path, $width, $height)
     {
       
-      $img = Image::make($path)->resize($width, $height)->save($path);
+      //$img = Image::make($path)->resize($width, $height)->save($path);
+        $img = Image::make($path)->orientate()->fit($width, (int)$height, function ($constraint) {
+						//$constraint->aspectRatio();
+						$constraint->upsize();
+						})->save($path);
     }
 
 
 	public function checkFileType($fileName){
       
-        $imageExtensions = ['jpg', 'jpeg', 'gif', 'png', 'bmp', 'svg', 'svgz', 'cgm', 'djv', 'djvu', 'ico', 'ief','jpe', 'pbm', 'pgm', 'pnm', 'ppm', 'ras', 'rgb', 'tif', 'tiff', 'wbmp', 'xbm', 'xpm', 'xwd','webp'];
+        $imageExtensions = ['jpg', 'jpeg', 'gif', 'png', 'bmp', 'svg', 'svgz', 'cgm', 'djv', 'djvu', 'ico', 'ief','jpe', 'pbm', 'pgm', 'pnm', 'ppm', 'ras', 'rgb', 'tif', 'tiff', 'wbmp', 'xbm', 'xpm', 'xwd','webp','JPG', 'JPEG', 'GIF', 'PNG', 'BMP', 'SVG', 'SVGZ', 'CGM', 'DJV', 'DJVU', 'ICO', 'IEF','JPE', 'PBM', 'PGM', 'PNM', 'PPM', 'RAS', 'RGB', 'TIF', 'TIFF', 'WBMP', 'XBM', 'XPM', 'XWD','WEBP'];
+
+
 
         $videoExtensions = ['flv','mp4','m3u8','ts','3gp','mov','avi','wmv','FLV','MP4','M3U8','TS','3GP','MOV','AVI','WMV'];
 
@@ -2940,20 +3159,38 @@ public function postTest() {
 					$filename=str_replace(' ', '_', $filename);
 					$image_full_name = $filename.'_'.time().'.'.$ext; 
 					$image=$image_full_name; 
-					$file->storeAs($imgPath,$image_full_name);
+					//$file->storeAs($imgPath,$image_full_name);
+					/*S3 storeage code */
+					$postImgPathS3 = config('constants.user_post_s3');
+			        $s3BaseURL = config('constants.s3_baseURL');
+					$file->storeAs($postImgPathS3.$post_id.'/',$image_full_name,'s3Public');
+
+
+
                     
                     /* thumb   */
 					 $isSendMail = config('constants.isSendMail');
 				    if($fileType=='image'){
-               			$smallthumbnail = $filename.'_1200_1200_'.time().'.jpg';    
-		               $file->storeAs('public/post_image/'.$post_id.'/', $smallthumbnail);
-		               $smallthumbnailpath =storage_path('app/public/post_image/'.$post_id.'/'.$smallthumbnail);
-		              $this->createThumbnail($smallthumbnailpath, 1200, 1200);
+				    	$postImgPath = $s3BaseURL.$postImgPathS3.$post_id.'/'.$image_full_name ;
+					    $postImgResize=getImageHeight($postImgPath);  
+
+               			$img = Image::make($file->getRealPath())->resize(1024, (int)$postImgResize, function ($constraint) {
+						$constraint->aspectRatio();
+						});
+                     $smallthumbnail = $filename.'_1200_1200_'.time().'.jpg';  
+                     Storage::disk('s3')->put($postImgPathS3.$post_id.'/'.$smallthumbnail, $img->stream()->__toString(),'public');
+
+
+               	// 		$smallthumbnail = $filename.'_1200_1200_'.time().'.jpg';    
+		              //  $file->storeAs('public/post_image/'.$post_id.'/', $smallthumbnail);
+		              //  $smallthumbnailpath =storage_path('app/public/post_image/'.$post_id.'/'.$smallthumbnail);
+		              // $this->createThumbnail($smallthumbnailpath, 1200, 1200);
              
               		}else if($fileType=='video' &&  $isSendMail==1){              	   
 // 
                       $smallthumbnail = $filename.'_1200_1200_'.time().'.jpg';    
-              
+              		 $file->storeAs($imgPath,$image_full_name);
+
               	 VideoThumbnail::createThumbnail(
                 storage_path('app/public').'/post_image/'.$post_id.'/'.$image_full_name, 
                 storage_path('app/public').'/post_image/'.$post_id, 
@@ -2962,7 +3199,12 @@ public function postTest() {
                 1200, 
                 1200
                 );
-              
+
+              $Imagepath = storage_path('app/public').'/post_image/'.$post_id.'/'.$smallthumbnail;
+            if(file_exists($Imagepath)){
+                $files = File::get($Imagepath);
+                Storage::disk('s3')->put($postImgPathS3.$post_id.'/'.$smallthumbnail, $files,'public');
+             }
 
               }else{
                 $smallthumbnail ='';    
@@ -3143,15 +3385,24 @@ public function postTest() {
 		    $know=isset($request->know)?$request->know:'' ;
             $gender=isset($request->basic_gender)?$request->basic_gender:'' ;
 			$date = date("Y-m-d H:i:s");
-			
+			$dob=isset($request->dob)?$request->dob:'0000-00-00' ;
+			$dob_= date("Y-m-d",strtotime($dob));
+
 			$updateData=array(
 				'know'=>!empty($know)?$know:"" ,
 				'gender'=>!empty($gender)?$gender:"" ,
+				'dob'=>$dob,
 				'updated_at'=>$date
 			);
+
+			$updateData_=array(
+				'dob'=>$dob,
+			);
+			
            
 			try{
 				   $updatestatus=DB::table('user_profile')->where('user_id',$user_id)->update($updateData);   
+				   DB::table('users')->where('id',$user_id)->update($updateData_);   
 				  if($updatestatus){
                      echo 1;
                    }else{
@@ -3277,8 +3528,12 @@ public function postTest() {
                     unset($res7);
                     unset($total);				 
 				
+				 $postImgPathS3 = config('constants.goodies_image');
+			     $s3BaseURL = config('constants.s3_baseURL');
+
 				 if(!empty($goodiesDatas->image)){
-				   $god['image']=url('/').'/storage/app/public/goodies_image/'.$goodiesDatas->image; 
+				   //$god['image']=url('/').'/storage/app/public/goodies_image/'.$goodiesDatas->image; 
+				   $god['image']=$s3BaseURL.$postImgPathS3.$goodiesDatas->id.'/'.$goodiesDatas->image; 
 				 }else{
 					 $god['image']='';
 				 }
@@ -3330,120 +3585,8 @@ public function postTest() {
 		$data=session()->get('user_session');
 		if(!empty($data)){
 		$user_id=$data['userId'];
-		$users = DB::table('users')
-            ->select('users.id','users.first_name','users.last_name','users.image','users.email','users.dob','users.status','user_profile.gender','user_profile.age','user_profile.country','user_profile.city','user_profile.relationship','user_profile.height','user_profile.smoking','user_profile.marital_status','user_profile.know','user_profile.interests','user_profile.eye_color','user_profile.looking_man_for','user_profile.self_des','user_profile.lat','user_profile.log','hip_size','bust','hair_style','hair_color','waist','banner_image')
-            ->leftjoin('user_profile','user_profile.user_id','=','users.id')
-            ->where('users.id','=',$data['userId'])
-            ->first();
-		$following_count = DB::table('follows')->where('user_id',$user_id)->where('status',1)->count();
-		$followers_count = DB::table('follows')->where('follow_id',$user_id)->where('status',1)->count();
-        $array['users'] = json_decode(json_encode($users), true);
-        
-        
-		if($array['users']['image']){
-		$array['users']['image']=url('/').'/storage/app/public/user_image/'.$array['users']['image'];
-		}else{
-		 $array['users']['image']=url('/').'/storage/app/public/user_image/'.'user.png';
-		}
-		if(!empty($array['users']['banner_image'])){
 		
-		$array['users']['banner_image']=url('/').'/storage/app/public/banner_image/'.$array['users']['banner_image'];
-		}else{
-		 $array['users']['banner_image']=url('/').'/storage/app/public/user_image/'.'banner_defualt.jpg';
-		}
-		$array['users']['following_count']=!empty($following_count)?$following_count:"0"; 
-		$array['users']['followers_count']=!empty($followers_count)?$followers_count:"0";
-		  $typeQry = "select * from post_images where user_id = '$user_id' order by id desc " ;
-		  
-            $postImage = DB::select($typeQry);
-		  $post_image=array();
-		  $res5=[];
-		  	if(!empty($postImage)){
-				foreach($postImage as $postImages){
-					// echo "<pre>";print_r($postImages->image);die; 
-					 $post_image['image']=url('/').'/storage/app/public/post_image/'.$postImages->image;
-					 $post_image['file_type']=$postImages->image_type;
-					 $res5[]=!empty($post_image)?$post_image:"";
-					 unset($post_image);
-				}  
-				//echo "<pre>";print_r($post_image);die;
-				
-			}  
-			$neartest_friends = DB::table('users')
-            ->select('users.id','users.first_name','users.last_name','users.image','user_profile.age','user_profile.country','user_profile.city','user_profile.lat','user_profile.log')
-            ->join('user_profile','user_profile.user_id','=','users.id')->where('users.id','!=',$data['userId'])->get(); 
-			$res3=[]; 
-             foreach($neartest_friends as $neartest_friend){
-				 
-				$follow_info = DB::table('follows')->where('user_id',$user_id)->where('follow_id',$neartest_friend->id)->where('status',1)->first();  
-				if(!empty($follow_info)){
-					$neartest['is_follow']=1;
-				}else{
-					$neartest['is_follow']=2;
-				}
-                $neartest['name']=$neartest_friend->first_name.' '.$neartest_friend->last_name;
-				$neartest['id']=$neartest_friend->id;
-				$neartest['country']=$neartest_friend->country;
-				$neartest['city']=$neartest_friend->city;    
-				if(!empty($neartest_friend->image)){
-				$neartest['image']=url('/').'/storage/app/public/user_image/'.$neartest_friend->image;
-				}else{
-					$neartest['image']=url('/').'/storage/app/public/user_image/'.'user.png';
-				}
-				$neartest['id']=$neartest_friend->id;
-				$res3[]=$neartest;
-				 
-			 }
-             $maches_friends = DB::table('friend_list')
-            ->select('users.first_name','users.last_name','users.image','users.login_date','friend_list.id')
-            ->join('users','users.id','=','friend_list.request_id')->where('friend_list.user_id','=',$data['userId'])->where('friend_list.status','=',2)->get();
-            $res1=[];			
-			foreach($maches_friends as $maches_friend){
-			     $date = Carbon::parse($maches_friend->login_date);
-				  $elapsed = $date->diffForHumans(Carbon::now());
-				  $elapsed=createdAt($elapsed);
-                $maches['name']=$maches_friend->first_name.' '.$maches_friend->last_name;
-				if(!empty($maches_friend->image)){
-				$maches['image']=url('/').'/storage/app/public/user_image/'.$maches_friend->image;
-				}else{
-					$maches['image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
-				}
-				$maches['active']=$elapsed;
-				$maches['id']=$maches_friend->id;
-				$res1[]=$maches;
-			}
-            $user_requests = DB::table('friend_list')
-            ->select('users.first_name','users.last_name','users.image','users.login_date','friend_list.id','friend_list.request_id','user_profile.country','user_profile.city')
-            ->join('users','users.id','=','friend_list.request_id')->join('user_profile','user_profile.user_id','=','friend_list.request_id')->where('friend_list.user_id','=',$data['userId'])->where('friend_list.status','=',1)->get();
-            $res2=[];			
-			foreach($user_requests as $user_request){
-                $user['name']=$user_request->first_name.' '.$user_request->last_name;
-				$user['country']=!empty($user_request->country)?$user_request->country:"";
-				$user['city']=!empty($user_request->city)?$user_request->city:"";
-				if(!empty($user_request->image)){
-				$user['image']=url('/').'/storage/app/public/user_image/'.$user_request->image;
-				}else{
-					$user['image']=url('/').'/storage/app/public/user_image/'.'user.png';
-				}
-				$user['request_id']=$user_request->request_id ;  
-				$res2[]=$user;    
-			}
-
-            $online_friends_list = DB::table('friend_list')->select('users.first_name','users.last_name','users.image','users.login_date','users.id')->join('users','users.id','=','friend_list.request_id')->where('friend_list.user_id','=',$data['userId'])->where('friend_list.status','=',2)->where('users.login_status','=',2)->get(); 
-			$res=array();
-			//echo "<pre>";print_r($online_friends_list);die; 
-			 if(!empty($online_friends_list)){
-                foreach($online_friends_list as $online_friends_lists){
-					$online['name']=$online_friends_lists->first_name.' '.$online_friends_lists->last_name;
-                    if(!empty($online_friends_lists->image)){
-						$online['image']=url('/').'/storage/app/public/user_image/'.$online_friends_lists->image;
-						}else{
-							$online['image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
-						}
-						$res[]=!empty($online)?$online:"";	
-                }						
-			  }
-
+			$array=aboutInfo($user_id); 
             $sqlquery = [];
             $querydata = "";
             if(@$request['S_goodies_name'])
@@ -3539,7 +3682,7 @@ public function postTest() {
                  unset($total);				 
 				
 				 if(!empty($goodiesDatas->image)){
-				   $god['image']=url('/').'/storage/app/public/goodies_image/'.$goodiesDatas->image; 
+				   $god['image']=goodiesImgPath().$goodiesDatas->id.'/'.$goodiesDatas->image; 
 				 }else{
 					 $god['image']='';
 				 }
@@ -3548,7 +3691,7 @@ public function postTest() {
 			}					 
 		 } 
 				
-		return view('website/filterGoodies',$array)->with('post_image',$res5)->with('neartest_friends',$res3)->with('maches_friend',$res1)->with('user_request',$res2)->with('goodies_listing',$res4)->with('online_contact',$res)->with('status',$request['status']);   
+		return view('website/filterGoodies',$array)->with('goodies_listing',$res4)->with('status',$request['status']);   
 	  }else{
 		 return redirect('/');    
 	  }
@@ -3603,7 +3746,7 @@ public function postTest() {
 							$reply['goodies_id']=$goodies_id;
 							$reply['reply_like_count']=$reply_like_count; 
 							if($user_info1->image){
-							$reply['image']=url('/').'/storage/app/public/user_image/'.$user_info1->image;
+							$reply['image']=userProfileImgPath().$reply_comments->user_id.'/'.$user_info1->image;
 							}else{
 							 $reply['image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
 							}
@@ -3638,12 +3781,12 @@ public function postTest() {
                     $comment['reply_comment_count']=!empty($reply_comment_count)?$reply_comment_count:"0";		  			
 					$comment['name']=$user_info->first_name .' '. $user_info->last_name;
 					if($user_info->image){
-						$comment['image']=url('/').'/storage/app/public/user_image/'.$user_info->image;
+						$comment['image']=userProfileImgPath().$commentDatas->user_id.'/'.$user_info->image;
 						}else{
 						 $comment['image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
 						}
 					if($session_user_info->image){
-						$comment['session_image']=url('/').'/storage/app/public/user_image/'.$session_user_info->image;
+						$comment['session_image']=userProfileImgPath().$commentDatas->user_id.'/'.$session_user_info->image;
 						}else{
 						 $comment['session_image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
 						} 
@@ -3785,12 +3928,12 @@ public function postTest() {
 					$comment['time']=$elapsed;
 					$comment['name']=$user_info->first_name .' '. $user_info->last_name;
 					if($user_info->image){
-						$comment['image']=url('/').'/storage/app/public/user_image/'.$user_info->image;
+						$comment['image']=userProfileImgPath().$commentDatas->user_id.'/'.$user_info->image;
 						}else{
 						 $comment['image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
 						}
 					if($session_user_info->image){
-						$comment['session_image']=url('/').'/storage/app/public/user_image/'.$session_user_info->image;
+						$comment['session_image']=userProfileImgPath().$commentDatas->user_id.'/'.$session_user_info->image;
 						}else{
 						 $comment['session_image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
 						}  
@@ -4121,6 +4264,8 @@ public function postTest() {
 					"followBack"=>1
 				);
 				$update=DB::table("user_follows")->select('isAccept','followBack')->where('followed_user_id',$requestId)->where('follower_user_id',$loginUserId)->update($update1);
+
+				 $this->follow->notification($data['userId'],$requestId);	
 			}		
 				
 		}else if($request->status == 'unfollow'){
@@ -4204,7 +4349,8 @@ public function postTest() {
              $user_info = DB::table('users')->where('id',$like_infos->user_id)->first();
 			  $like['name']=$user_info->first_name;
 			  if(!empty($user_info->image)){
-					$like['image']=url('/').'/storage/app/public/user_image/'.$user_info->image;
+			  		$like['image']=userProfileImgPath().$like_infos->user_id.'/'.$user_info->image ;
+					//$like['image']=url('/').'/storage/app/public/user_image/'.$user_info->image;
 					}else{
 					 $like['image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
 					}
@@ -4227,7 +4373,8 @@ public function postTest() {
              $user_info = DB::table('users')->where('id',$like_infos->user_id)->first();
 			  $like['name']=$user_info->first_name; 
 			  if(!empty($user_info->image)){
-					$like['image']=url('/').'/storage/app/public/user_image/'.$user_info->image;
+			  	$like['image']=userProfileImgPath().$like_infos->user_id.'/'.$user_info->image ;
+					//$like['image']=url('/').'/storage/app/public/user_image/'.$user_info->image;
 					}else{
 					 $like['image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
 					}
@@ -4245,10 +4392,12 @@ public function postTest() {
 			return redirect('/');   
 		}
 
-		  $usrImgPath=url('/').'/storage/app/public/user_image/' ;
+		  //$usrImgPath=url('/').'/storage/app/public/user_image/' ;
+		  $usrImgPath=userProfileImgPath() ;
+
           $defaultImgPath=url('/').'/storage/app/public/user_image/user.png';
 
-		$like_info = DB::table('post_like')->select(DB::raw("concat(users.first_name,' ',users.last_name) as name"),DB::raw(" case when users.image is null then ('".$defaultImgPath."') else concat('". $usrImgPath."',image) end as image"))->where('post_id',$id)
+		$like_info = DB::table('post_like')->select(DB::raw("concat(users.first_name,' ',users.last_name) as name"),DB::raw(" case when users.image is null then ('".$defaultImgPath."') else concat('". $usrImgPath."',users.id,'/',image) end as image"))->where('post_id',$id)
 		->join('users','users.id','=','post_like.user_id')
 		->where('post_like.status',1)->orderBy('post_like.id', 'desc')->get()->toArray();
 		$res=array() ;
@@ -4267,13 +4416,14 @@ public function postTest() {
 			return redirect('/');   
 		}
 
-		  $usrImgPath=url('/').'/storage/app/public/user_image/' ;
+		  //$usrImgPath=url('/').'/storage/app/public/user_image/' ;
+		  $usrImgPath=userProfileImgPath();
           $defaultImgPath=url('/').'/storage/app/public/user_image/user.png';
-
-		// $like_info = DB::table('post_like')->select(DB::raw("concat(users.first_name,' ',users.last_name) as name"),DB::raw(" case when users.image is null then ('".$defaultImgPath."') else concat('". $usrImgPath."',image) end as image"))->where('post_id',$id)
+          
+		/// $like_info = DB::table('post_like')->select(DB::raw("concat(users.first_name,' ',users.last_name) as name"),DB::raw(" case when users.image is null then ('".$defaultImgPath."') else concat('". $usrImgPath."',image) end as image"))->where('post_id',$id)
 		// ->join('users','users.id','=','post_like.user_id')
 		// ->where('post_like.status',1)->orderBy('post_like.id', 'desc')->get()->toArray();
-		$like_info = DB::table('stories_like')->select('stories_like.is_like',DB::raw("concat(users.first_name,' ',users.last_name) as name"),DB::raw(" case when users.image is null then ('".$defaultImgPath."') else concat('". $usrImgPath."',image) end as image"))
+		$like_info = DB::table('stories_like')->select('stories_like.is_like',DB::raw("concat(users.first_name,' ',users.last_name) as name"),DB::raw(" case when users.image is null then ('".$defaultImgPath."') else concat('". $usrImgPath."',users.id,'/',image) end as image"))
 		->join('users','users.id','=','stories_like.user_id')		
 		->where('stories_like.story_id',$id)
 		->orderBy('stories_like.id', 'desc')->get()->toArray();
@@ -4305,8 +4455,9 @@ public function postTest() {
 		$data=session()->get('user_session');  
 		$date = date("Y-m-d H:i:s");  
 		$followBack=DB::table('user_follows')->select('followBack')->where('follower_user_id',$request->id)->where('followed_user_id',$data['userId'])->where('isAccept',1)->first();
-		$isFollowBack=isset($followBack->followBack)?$followBack->followBack:0 ;
+		 $isFollowBack=isset($followBack->followBack)?$followBack->followBack:0 ;
 		
+		try{ 
 		if($isFollowBack==1){
 			$updateData=array(
 				"followBack"=>2,
@@ -4326,7 +4477,11 @@ public function postTest() {
 			}else{
 				 echo 3;
 			}
-		
+		} catch(\Exception $e)
+			{
+				echo $e ;
+			  echo  errorResponse('error occurred'); 
+			} 
 		
     }
 	
@@ -4493,7 +4648,7 @@ public function postTest() {
 
      public function serach(Request $request){
      	$data=session()->get('user_session');
-     	 $usrImgPath=url('/').'/storage/app/public/user_image/' ;
+     	 $usrImgPath=userProfileImgPath() ;
           $defaultImgPath=url('/').'/storage/app/public/user_image/user.png';
           //DB::enableQueryLog();
           $loginUserId = $data['userId'] ;
@@ -4509,7 +4664,7 @@ public function postTest() {
 
 
           $peopleYouMayKnow = DB::table('users')
-            ->select('users.id',DB::raw(" concat(users.first_name,' ',users.last_name) as name "),'users.first_name','users.last_name', DB::raw("case when users.image is null then concat('".$defaultImgPath."') else concat('".$usrImgPath."',users.image) end as image"),'user_profile.age','user_profile.country','user_profile.city','user_profile.lat','user_profile.log',DB::raw("'' as mutual_friend")            	
+            ->select('users.id',DB::raw(" concat(users.first_name,' ',users.last_name) as name "),'users.first_name','users.last_name', DB::raw("case when users.image is null then concat('".$defaultImgPath."') else concat('".$usrImgPath."',users.id,'/',users.image) end as image"),'user_profile.age','user_profile.country','user_profile.city','user_profile.lat','user_profile.log',DB::raw("'' as mutual_friend")            	
         )->addSelect(DB::raw("(select case when isAccept=0 then 1 when isAccept=1 then 2 else 3 end  from user_follows where (followed_user_id=".$loginUserId." and follower_user_id=users.id) or (followed_user_id=users.id and follower_user_id=".$loginUserId.")  limit 1) as is_follow"))
             ->addSelect(DB::raw("(select count(id) from user_follows where followed_user_id=users.id  and follower_user_id=".$loginUserId." and isAccept=0 limit 1) as isInvition"))
             ->leftjoin('user_profile','user_profile.user_id','=','users.id') 
@@ -4525,48 +4680,7 @@ public function postTest() {
            
      }
 	 
-	 public function serach_old(Request $request){
-		 $data=session()->get('user_session');
-		 $user_id=$data['userId'];
-		 $res=array();
-		 $search=!empty($request->search)?$request->search:"";
-		 $result=user_search($search,$user_id);
-
-		 if(!empty($result)){
-			 foreach($result as $results){
-				 $friend_info = DB::table('friend_list')->where('user_id',$user_id)->where('request_id',$results->id)->first();
-				 if(!empty($friend_info)){
-					if($friend_info->status == 1){
-						$search_info['isFriend']='Pending';
-                    }
-					if($friend_info->status == 2){
-						$search_info['isFriend']='Accept';
-                    }
-                    					
-				 }else{
-					 $search_info['isFriend']='No'; 
-				 }
-		         //if(empty($friend_info)){
-				 $search_info['name']=$results->first_name.' '.$results->last_name;
-				 $search_info['country']=!empty($results->country)?$results->country:"";
-				 $search_info['city']=!empty($results->city)?$results->city:"";
-				 $search_info['id']=!empty($results->id)?$results->id:"";  
-                 $mutual_info=$this->mutual_friend($results->id,$user_id);
-				//echo "<pre>";print_r(($mutual_info[0]->mutual_friend_count));die; 
-				$search_info['mutual_friend']=!empty($mutual_info[0]->mutual_friend_count)? ($mutual_info[0]->mutual_friend_count):"";
-				 if($results->image){    
-		            $search_info['image']=url('/').'/storage/app/public/user_image/'.$results->image;
-					}else{
-					$search_info['image']=url('/').'/storage/app/public/user_image/'.'user.png';
-					}
-					$res[]=!empty($search_info)?$search_info:"";
-			 } 
-			 //}
-		 }	 
-		  return  response()->json($res); 
-		 
-		 
-	 }
+	
 	
 	 public function change_password(Request $request){
 		$data=session()->get('user_session');
@@ -4607,6 +4721,8 @@ public function postTest() {
 				echo 3 ; exit ;
 			}
 
+
+
 	
 			/*  test */
 			 $credentials1 = [
@@ -4634,11 +4750,17 @@ public function postTest() {
 		'isOnline'=>1	      
         );  
 		DB::table('users')->where('id',$userId)->update($updateData);
+
+		 $s3BaseURL = config('constants.s3_baseURL');  
+         $userProflieImg = config('constants.user_profile_img_s3');
+         $usrImgPath=$s3BaseURL.$userProflieImg ;
+
 		if(!empty($user->image)){
-		    $image=url('/').'/storage/app/public/user_image/'.$user->image;	
+		    $image=$usrImgPath.$userId.'/'.$user->image ; //url('/').'/storage/app/public/user_image/'.$user->image;	
 		}else{
-			$image=url('/').'/storage/app/public/user_image/'.'user_holder.svg';
+			$image=url('/').'/storage/app/public/user_image/'.'user.png';
 		}
+
          $session_data = array('userId' => $userId,
                                 'userType' => $userType,
                                 'userFirstName' =>$user->first_name,
@@ -4793,10 +4915,14 @@ public function postTest() {
     	
  		/* story info */
 		 $current_date=date("Y-m-d H:i:s");
-		
-		$sImgPath = URL('/').'/storage/app/public/stories_image/' ;
+		$s3BaseURL = config('constants.s3_baseURL');
+		$user_stories_s3 = config('constants.user_stories_s3');
+			       
+		  $sImgPath=$s3BaseURL.$user_stories_s3 ;
+		//$sImgPath = URL('/').'/storage/app/public/stories_image/' ;
+
 		$friend=getFriendListUserId($user_id);           
-		$story_infos_ = DB::table('stories')->select('users.id',DB::raw(" concat(users.first_name,' ',users.last_name) as name"),DB::raw(" case when stories.image is null then '' else concat('".$sImgPath."',stories.image) end as image"),DB::raw(" count(*) as totalStory"),'file_type')
+		$story_infos_ = DB::table('stories')->select('users.id',DB::raw(" concat(users.first_name,' ',users.last_name) as name"),DB::raw(" case when stories.image is null then '' else concat('".$sImgPath."',users.id,'/',stories.image) end as image"),DB::raw(" count(*) as totalStory"),'file_type')
 		->leftjoin('users','users.id','=','stories.user_id')
 		->where('user_id','!=',$user_id)->where('stories.created_at','<=',$current_date)->where('stories.till_valid','>=',$current_date)
 		->whereIn('stories.user_id',$friend)
@@ -4809,7 +4935,8 @@ public function postTest() {
 		  $storiesType = isset($myStoryImg->file_type)?$myStoryImg->file_type:1 ;
 
 		 if($myStoryImage!='' && $my_story_info > 0){
-		 	$mSImg = URL('/').'/storage/app/public/stories_image/'.$myStoryImage ;
+		 	//$mSImg = URL('/').'/storage/app/public/stories_image/'.$myStoryImage ;
+		 	$mSImg = $sImgPath.$user_id.'/'.$myStoryImage ;
 		 }else{
 		 	$mSImg = $array['users']['image'] ;
 		 }					 
@@ -4857,14 +4984,19 @@ public function postTest() {
 			$user_id=$request->id;
 			$array=aboutInfo($user_id);
 			
-          $usrImgPath=url('/').'/storage/app/public/user_image/' ;
+          //$usrImgPath=url('/').'/storage/app/public/user_image/' ;
+			$s3BaseURL = config('constants.s3_baseURL');
+		    $usrImg = config('constants.user_profile_img_s3');
+			       
+		  $usrImgPath=$s3BaseURL.$usrImg ;
           $defaultImgPath=url('/').'/storage/app/public/user_image/user.png';
+
        
             $peopleYouMayKnow = peopleYouMayKnow();
   
       
          $user_requests_ = DB::table('users')
-            ->select('users.id',DB::raw(" concat(users.first_name,' ',users.last_name) as name "),'users.first_name','users.last_name', DB::raw("case when users.image is null then concat('".$defaultImgPath."') else concat('".$usrImgPath."',users.image) end as image"),'user_profile.age','user_profile.country','user_profile.city','user_profile.lat','user_profile.log',DB::raw("'' as mutual_friend")            	
+            ->select('users.id',DB::raw(" concat(users.first_name,' ',users.last_name) as name "),'users.first_name','users.last_name', DB::raw("case when users.image is null then concat('".$defaultImgPath."') else concat('".$usrImgPath."',users.id,'/',users.image) end as image"),'user_profile.age','user_profile.country','user_profile.city','user_profile.lat','user_profile.log',DB::raw("'' as mutual_friend")            	
         )            
             ->leftjoin('user_profile','user_profile.user_id','=','users.id')   
             ->join('user_follows','user_follows.followed_user_id','=','users.id') 
@@ -4873,7 +5005,7 @@ public function postTest() {
             ->where('users.id','!=',$data['userId'])->get()->toArray();  
 			
 	  $user_requestsBackFollow = DB::table('users')
-            ->select('users.id',DB::raw(" concat(users.first_name,' ',users.last_name) as name "),'users.first_name','users.last_name', DB::raw("case when users.image is null then concat('".$defaultImgPath."') else concat('".$usrImgPath."',users.image) end as image"),'user_profile.age','user_profile.country','user_profile.city','user_profile.lat','user_profile.log',DB::raw("'' as mutual_friend")            	
+            ->select('users.id',DB::raw(" concat(users.first_name,' ',users.last_name) as name "),'users.first_name','users.last_name', DB::raw("case when users.image is null then concat('".$defaultImgPath."') else concat('".$usrImgPath."',users.id,'/',users.image) end as image"),'user_profile.age','user_profile.country','user_profile.city','user_profile.lat','user_profile.log',DB::raw("'' as mutual_friend")            	
         )            
             ->leftjoin('user_profile','user_profile.user_id','=','users.id')   
             ->join('user_follows','user_follows.follower_user_id','=','users.id') 
@@ -4905,7 +5037,11 @@ public function postTest() {
 			 $post['user_id']=!empty($post_info->user_id)?$post_info->user_id:"";
 			 $post['post_text']=!empty($post_info->post_text)?$post_info->post_text:"";
 			 $post['post_type']=!empty($post_info->post_type)?$post_info->post_type:"";
-			 $imagePath=URL('/').'/storage/app/public/post_image/' ;
+			// $imagePath=URL('/').'/storage/app/public/post_image/' ;
+			 $postImgPathS3 = config('constants.user_post_s3');
+			 $s3BaseURL = config('constants.s3_baseURL');	
+             $imagePath=$s3BaseURL.$postImgPathS3 ;
+
 			 $post_image = DB::table('post_images')->select(DB::raw(" case when image is null then '' else concat('".$imagePath."',post_images.post_id,'/',image) end as image"),DB::raw("image_type as file_type"),DB::raw("id as image_id"))->where('post_id',$id)->get()->toArray();
 
     //          foreach($post_image as $post_images){
@@ -4943,108 +5079,9 @@ public function postTest() {
 		 $data=session()->get('user_session');
 		if(!empty($data)){
 			$user_id=$id;
-			
-			$users = DB::table('users')
-            ->select('users.id','users.first_name','users.last_name','users.image','users.email','users.dob','users.status','user_profile.gender','user_profile.age','user_profile.country','user_profile.city','user_profile.relationship','user_profile.height','user_profile.smoking','user_profile.marital_status','user_profile.know','user_profile.interests','user_profile.eye_color','user_profile.looking_man_for','user_profile.self_des','user_profile.lat','user_profile.log','hip_size','bust','hair_style','hair_color','waist','banner_image')
-            ->leftJoin('user_profile','user_profile.user_id','=','users.id')
-            ->where('users.id','=',$user_id)  
-            ->first();
-		$following_count = DB::table('follows')->where('user_id',$user_id)->where('status',1)->count();
-		$followers_count = DB::table('follows')->where('follow_id',$user_id)->where('status',1)->count();
-        $array['users'] = json_decode(json_encode($users), true);
-		if($array['users']['image']){
-		$array['users']['image']=url('/').'/storage/app/public/user_image/'.$array['users']['image'];
-		}else{
-		 $array['users']['image']=url('/').'/storage/app/public/user_image/'.'user.png';
-		}
-		if(!empty($array['users']['banner_image'])){
-		
-		$array['users']['banner_image']=url('/').'/storage/app/public/banner_image/'.$array['users']['banner_image'];
-		}else{
-		 $array['users']['banner_image']=url('/').'/storage/app/public/user_image/'.'banner_defualt.jpg';
-		}
-		$array['users']['following_count']=!empty($following_count)?$following_count:"0"; 
-		$array['users']['followers_count']=!empty($followers_count)?$followers_count:"0";
-			
-		 $booking_info=BookingRequest::where('user_id',$user_id)->where('user_id',$user_id)->where('booking_type',1)->get();
-		 //echo "<pre>";print_r($booking_info);die; 
-		 $res=array();
-		 $res1=array();
-		 if(!empty($booking_info)){
-			 foreach($booking_info as $booking_infos){
-			  $user_info=User::where('id',$booking_infos->user_id)->first();
-			  $event_info=Event::where('id',$booking_infos->type_id)->first();
-			  if(empty($event_info)){
-			  	continue ;
-			  }
-			  //echo "<pre>";print_r($event_info);die; 
-			  $order['name']=$user_info->first_name.' '.$user_info->last_name;
-			  $order['event_name']=$event_info->event_name;
-			  $order['event_address']=$event_info->address;
-			  $order['order_id']=$booking_infos->id;
-			  $order['no_ticket']=$booking_infos->number_of_ticket;
-			  if($booking_infos->status == 1){
-				$order['order_status']='Pending';  
-			  }else if($booking_infos->status == 2){
-			     $order['order_status']='Approved';
-		      }else{
-				 $order['order_status']='Cancal'; 
-			  }
-			  $order['order_date']=date('D, d M Y ', strtotime($booking_infos->created_at));
-			   if($event_info->event_fee_type == 1){
-				$order['event_fee_type']='Paid';
-			  }else{
-				$order['event_fee_type']='Free';
-			  }
-			  $imageData = DB::table('event_images')->where('event_id',$booking_infos->type_id)->first();	   
-			  $order['image']=url('/').'/storage/app/public/event_image/'.$imageData->image;
-					  
-			  $res[]=!empty($order)?$order:"";
-			 } 
-		 }
+			$array=aboutInfo($user_id);
 		 
-		 $goodies_info=BookingRequest::where('user_id',$user_id)->where('user_id',$user_id)->where('booking_type',2)->get();
-		 //echo "<pre>";print_r($booking_info);die; 
-		 $res1=array();  
-		 if(!empty($goodies_info)){
-			 foreach($goodies_info as $goodies_info){
-			  $user_info1=User::where('id',$goodies_info->user_id)->first();
-			  $goodies_data=Goodies::where('id',$goodies_info->type_id)->first();
-			  //echo "<pre>";print_r($event_info);die; 
-			  $god['name']=$user_info1->first_name.' '.$user_info1->last_name;
-			  $god['goodies_name']=isset($goodies_data->title)?$goodies_data->title:'';
-			  $god['goodies_address']=isset($goodies_data->goodies_address)?$goodies_data->goodies_address:'';
-			  $god['order_id']=$goodies_info->id;
-			  $god['no_ticket']=$goodies_info->number_of_ticket;
-			  if($goodies_info->status == 1){
-				$god['order_status']='Pending';  
-			  }else if($goodies_info->status == 2){
-			     $god['order_status']='Approved';
-		      }else{
-				 $god['order_status']='Cancal'; 
-			  }
-			  $god['order_date']=date('D, d M Y ', strtotime($goodies_info->created_at));
-			   if(isset($goodies_data->goodies_fee_type) && $goodies_data->goodies_fee_type == 1){
-				$god['goodies_fee_type']='Paid';
-			  }else{
-				$god['goodies_fee_type']='Free';
-			  }
-
-			  if(isset($goodies_data->image) && $goodies_data->image!=''){
-			  	 $god['image']=url('/').'/storage/app/public/goodies_image/'.$goodies_data->image;
-			  	}else{
-			  	  $god['image']='' ;
-
-			  	 }
-			  $res1[]=!empty($god)?$god:"";
-			  
-			  	}
-		 }
-		 
-		 //echo "<pre>";print_r($res);die; 
-		 //echo "<pre>";print_r($res);die; 
-		 
-		 return view('website.pages.myevent.myevent',$array)->with('order',$res)->with('god_order',$res1);  
+		 return view('website.pages.myevent.myevent',$array)->with('requestId',$id);  
 		}else{
 			return redirect('/'); 
 		}  
@@ -5060,10 +5097,15 @@ public function postTest() {
           $postImage = DB::select($typeQry);
 		  $post_image=array();
 		  $res5=[];
+
+		  $s3BaseURL = config('constants.s3_baseURL');
+		  $user_post_s3 = config('constants.user_post_s3');	
+
 		  	if(!empty($postImage)){
 				foreach($postImage as $postImages){
 					// echo "<pre>";print_r($postImages->image);die; 
-					 $post_image['image']=url('/').'/storage/app/public/post_image/'.$postImages->image;
+					// $post_image['image']=url('/').'/storage/app/public/post_image/'.$postImages->image;
+					 $post_image['image']=$s3BaseURL.$user_post_s3.$postImages->post_id.'/'.$postImages->image;
 					 $post_image['file_type']=$postImages->image_type;
 					 $res5[]=!empty($post_image)?$post_image:"";
 					 unset($post_image);
@@ -5081,96 +5123,7 @@ public function postTest() {
          
 		$data=session()->get('user_session');
 	    $user_id=$id;
-		$users = DB::table('users')
-            ->select('users.id','users.first_name','users.last_name','users.image','users.email','users.dob','users.status','user_profile.gender','user_profile.age','user_profile.country','user_profile.city','user_profile.relationship','user_profile.height','user_profile.smoking','user_profile.marital_status','user_profile.know','user_profile.interests','user_profile.eye_color','user_profile.looking_man_for','user_profile.self_des','user_profile.lat','user_profile.log','hip_size','bust','hair_style','hair_color','waist','banner_image')
-            ->join('user_profile','user_profile.user_id','=','users.id')
-            ->where('users.id','=',$user_id)
-            ->first();
-			 //echo "<pre>";print_r($users);die; 
-		$following_count = DB::table('follows')->where('user_id',$user_id)->where('status',1)->count();
-		$followers_count = DB::table('follows')->where('follow_id',$user_id)->where('status',1)->count();
-        $array['users'] = json_decode(json_encode($users), true);
-		if($array['users']['image']){
-		$array['users']['image']=url('/').'/storage/app/public/user_image/'.$array['users']['image'];
-		}else{
-		 $array['users']['image']=url('/').'/storage/app/public/user_image/'.'user.png';
-		}
-		if(!empty($array['users']['banner_image'])){
-		
-		$array['users']['banner_image']=url('/').'/storage/app/public/banner_image/'.$array['users']['banner_image'];
-		}else{
-		 $array['users']['banner_image']=url('/').'/storage/app/public/user_image/'.'banner_defualt.jpg';
-		}
-		$array['users']['following_count']=!empty($following_count)?$following_count:"0"; 
-		$array['users']['followers_count']=!empty($followers_count)?$followers_count:"0";
-
-
-		// if(!empty($data)){
-		//  $typeQry = "select * from posts where user_id='$user_id' order by id desc" ; 
-  //        $postData = DB::select($typeQry);
-		//  $res1=array();
-		//  $reply_comment_count=0;  
-		//  if(!empty($postData)){
-		// 	foreach($postData as $postDatas){ 
-		// 		  $user_info = DB::table('users')->where('id', $postDatas->user_id)->first();
-		// 		  $session_user_info = DB::table('users')->where('id', $user_id)->first();
-		// 		  $post_like_count= DB::table('post_like')->where('post_id', $postDatas->id)->where('status',1)->count();
-		// 		  $post_comment_count= DB::table('comments')->where('post_id', $postDatas->id)->count();
-		// 		  $reply_comment_count= DB::table('reply_comments')->where('post_id',$postDatas->id)->count(); 
-				  
-		// 		  $user_post_like_Yes_or_no= DB::table('post_like')->where('post_id', $postDatas->id)->where('user_id', $user_id)->where('status',1)->first(); 
-  //                  if(!empty($user_post_like_Yes_or_no)){
-		// 				 $post['user_post_is_like']="Yes";    
-		// 			   }else{
-		// 				 $post['user_post_is_like']="No";   
-		// 			   }
-				 
-		// 		  $total_count=$post_comment_count+$reply_comment_count;  
-		// 		  //echo "<pre>";print_r($post_like_count);die; 
-		// 		  $date = Carbon::parse($postDatas->created_at);
-		// 		  $elapsed = $date->diffForHumans(Carbon::now());
-		// 		  $elapsed=createdAt($elapsed);
-		// 		  $post['id']=$postDatas->id;
-		// 		  $post['post_user_id']=$postDatas->user_id;
-		// 		  $post['session_user_id']=$user_id;
-		// 		  $post['name']=$user_info->first_name .' '. $user_info->last_name;
-		// 		  $post['post_text']=$postDatas->post_text;
-		// 		  $post['post_type']=$postDatas->post_type;
-		// 		  $post['post_like_count']=!empty($post_like_count)?$post_like_count:"";
-		// 		  $post['post_comment_count']=!empty($total_count)?$total_count:"";  
-		// 		  $post['time']=$elapsed;
-		// 		  unset($total_count);
-		// 		  if($user_info->image){
-		// 					$post['user_image']=url('/').'/storage/app/public/user_image/'.$user_info->image;
-		// 					}else{
-		// 					 $post['user_image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
-		// 					}
-  //                 if($session_user_info->image){  
-		// 				$post['session_image']=url('/').'/storage/app/public/user_image/'.$session_user_info->image;
-		// 				}else{
-		// 				 $post['session_image']=url('/').'/storage/app/public/user_image/'.'no-img.png';
-		// 				} 							
-		// 		  $imgQry = "select * from post_images where post_id=".$postDatas->id; 
-  //                 $imageData = DB::select($imgQry);
-		// 		  foreach($imageData as $imageDatas){  
-		// 		  $image['image']=url('/').'/storage/app/public/post_image/'.$imageDatas->image;
-		// 		  $image['file_type']=$imageDatas->image_type;
-		// 		  $post_image[]=$image;  
-		// 		  }
-		// 		  $post['post_image']=!empty($post_image)?$post_image:"";
-		// 		  unset($post_image);    
-		// 		  $res1[]=!empty($post)?$post:"";
-
-		// 	}
-  //            ///echo "<pre>";print_r($res1);die; ->with('post_info',$res1)
-		// 	//->with('post_info',$res1)
-  //           return view('website.pages.Profile.post',$array);			
-			 
-		//  }else{
-  //          return view('website.pages.Profile.post',$array);
-  //        }
-			
-		// }
+	    $array=aboutInfo($user_id);
 
  			return view('website.pages.Profile.post',$array);		
 
@@ -5399,8 +5352,10 @@ public function postTest() {
     public function updateCountrySession(Request $request){
 
     		$value=$request->value ;
-    		$imgUrl = $request->imgUrl ;
+            $imgUrl = $request->imgUrl ;
     		$countryName = $request->countryName ;
+    		
+    		
 
     	session()->put('defaultCountry', array('image'=>$imgUrl,'value'=>$value,'name'=>$countryName));
 
@@ -5514,5 +5469,7 @@ public function postTest() {
          }
 	      
     }
+
+    
 
 }

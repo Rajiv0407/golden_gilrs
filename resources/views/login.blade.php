@@ -41,6 +41,8 @@
             $defaultCountry=session()->get('defaultCountry');
             $country=getCountry(); 
 
+
+
           ?>
           <select class="f-control f-dropdown select" id="gg_country" name="gg_country" onchange="ggCountry()" placeholder="Select Country">
             <?php 
@@ -259,6 +261,7 @@
     </div>
   </section>
 
+
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
   <script src="{{URL::to('/public/website')}}/js/bootstrap.min.js"></script>
@@ -267,6 +270,8 @@
   <script src="{{URL::to('/public/website')}}/js/custom.js"></script>
   <script src="{{URL::to('/public/website')}}/js/jquery.notyfy.js?v={{ config('app.version') }}" type="text/javascript"></script>
   <script src="{{URL::to('/public/website')}}/js/notyfy.init.js?v={{ config('app.version') }}" type="text/javascript"></script>
+
+
   <script>
     //country phone input
     var telInput = $(".tel_input")
@@ -304,7 +309,10 @@
       var dob = $('#dob').val();
       var nationality = $('#nationality').val();
       var password = $('#password').val();
-//
+
+      var cehckAge = ageRestriction(dob);
+      
+//Age must be greater than or equal to 18
       $('.err').html('');
       if (first_name == '') {
         $('#error_first_name').html('Please enter first name');
@@ -320,6 +328,8 @@
         $('#error_mobile_number').html('Please enter maximum 12 digits');
       } else if (dob == '') {
         $('#error_dob').html('Please enter date of birth');
+      } else if (!cehckAge) {
+        $('#error_dob').html('Age must be greater than or equal to 18');
       } else if (nationality == '') {
         $('#error_nationality').html('Please enter nationality');
       } else if (password == '') {
@@ -358,6 +368,38 @@
       }
     }
 
+
+function ajaxCsrf() {
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+}
+   
+   function ageRestriction(date){
+      var dob=date.split('-');
+      
+      var day = parseInt(dob[2]);
+      var month = parseInt(dob[1]);
+      var year = parseInt(dob[0]);
+      var age = 18;
+
+     
+      var setDate = new Date(year + age, month - 1, day);
+      var currdate = new Date();
+
+      if (currdate >= setDate) {
+       
+        return true ;
+      } else {
+       
+        return false ;
+      }
+
+   }
+
+
     function login() {
       var email = $('#login_email').val();
       var password = $('#login_password').val();
@@ -369,7 +411,7 @@
         $('#error_login_password').html('Please enter password');
       } else {
         var formData = $('#login_forms_id').serialize(); //new FormData($('#login_forms_id')[0]);				
-
+      
         ajaxCsrf();
         $.ajax({
           type: "post",
@@ -437,6 +479,8 @@
       }
     }
   </script>
+
+
   <script type="text/javascript">
     var primaryColor = '#6fa362',
       dangerColor = '#b55151',
@@ -464,10 +508,10 @@
     }
 
     function ggCountry(countryName,value,imgUrl){    
-    
+     
     var gc=$('#gg_country').val() ;
     $('#ggCountrId').text(countryName);
-
+     ajaxCsrf();
       $.ajax({
         type: "post",
         url: baseUrl + '/updateCountrySession',
@@ -479,6 +523,7 @@
 
 }
   </script>
+
 </body>
 
 </html>

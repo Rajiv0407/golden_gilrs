@@ -30,9 +30,9 @@
 							<?php if($val1->is_like==1){ ?> 
 								<i class="ri-heart-fill" ></i>
 						
-						<?php }else{ ?>
-							<i class="ri-heart-line" ></i>
-						<?php } ?>
+						<?php } //else{ ?>
+							<!-- <i class="ri-heart-line" ></i> -->
+						<?php //} ?>
 						
 						</button> 
 						</div>

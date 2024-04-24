@@ -99,7 +99,7 @@
 
         $.ajax({
             type:"POST",
-            url:baseUrl+'/changeAdminPassword',
+            url:baseUrl+'/changeAdminUserPassword',
             data:formData,
             dataType:'json',
             beforeSend:function()
@@ -107,9 +107,7 @@
                  ajax_before();
             },
             success:function(res)
-            {
-
-                 ajax_success() ;
+            {    ajax_success() ;
 
             if(res.status==1){
             $('.modal-backdrop').hide();      
